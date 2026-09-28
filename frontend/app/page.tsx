@@ -43,13 +43,15 @@ export default function ChatPage() {
       <Link href="/" className="brand"><span className="logo">UTC</span><span>Trợ lý tuyển sinh<small>GIAO THÔNG VẬN TẢI</small></span></Link>
       <button className="new-chat" disabled={busy} onClick={() => {token.current=''; localStorage.removeItem('utc-session');setMessages([]);setError('');setRatings({});}}>＋ Cuộc trò chuyện mới</button>
       <div className="sidebar-label">KHÔNG GIAN TRA CỨU</div>
+      <Link className="nav-link" href="/freshmen">▦ &nbsp; Hồ sơ tân sinh viên</Link>
+      <Link className="nav-link" href="/majors">▦ &nbsp; Tra cứu ngành học</Link>
       <div className="nav-active">◈ &nbsp; Hỏi đáp tuyển sinh</div>
       <a className="nav-link" href="https://tuyensinh.utc.edu.vn" target="_blank" rel="noreferrer">↗ &nbsp; Cổng tuyển sinh UTC</a>
       <div className="sidebar-note"><span className="eyebrow">CÓ NGUỒN, CÓ CĂN CỨ</span><p>Mỗi câu trả lời được đối chiếu với tài liệu trong kho tri thức tuyển sinh.</p></div>
       <Link className="admin-link" href="/admin">⚙ &nbsp; Quản trị tài liệu</Link>
     </aside>
     <main className="chat-main">
-      <header className="topbar"><span>Hỏi đáp cùng UTC <span className="tag">AI ASSISTANT</span></span><a href="https://tuyensinh.utc.edu.vn" target="_blank" rel="noreferrer">Nguồn chính thức ↗</a></header>
+      <header className="topbar"><span>Hỏi đáp cùng UTC <span className="tag">AI ASSISTANT</span></span><div className="topbar-links"><Link href="/majors">Ngành học</Link><Link href="/freshmen">Tân sinh viên ↗</Link></div></header>
       <div className="filters"><span>Thông tin áp dụng</span><label>Năm <input aria-label="Năm tuyển sinh" type="number" min="2000" max="2100" value={year} onChange={e => setYear(Number(e.target.value))}/></label><label>Cơ sở <select value={campus} onChange={e => setCampus(e.target.value)}><option value="hanoi">Hà Nội</option><option value="hcm">TP. Hồ Chí Minh</option></select></label></div>
       <section className="conversation" aria-live="polite">
         {!messages.length && <div className="welcome"><div className="welcome-icon">✦</div><div className="eyebrow">CHÀO BẠN, MÌNH LÀ TRỢ LÝ UTC</div><h1>Hành trình đại học,<br/><em>bắt đầu từ một câu hỏi.</em></h1><p>Cùng tìm hiểu ngành học, phương thức xét tuyển và những điều bạn cần chuẩn bị. Thông tin rõ ràng, kèm nguồn để bạn kiểm chứng.</p><div className="suggestions">{prompts.map((p,i) => <button key={p} onClick={() => setQuestion(p)}><span>0{i+1} ↗</span>{p}</button>)}</div></div>}

@@ -120,5 +120,50 @@ Lỗi chat “null value in column sources” đã được sửa bằng cách g
 Kiểm tra tích hợp Storage đã chạy trên dự án cấu hình: upload/download đúng bytes, signed URL hoạt động, URL công khai bị chặn, xóa tệp thử thành công. Bulk insert lịch sử chat với sources=[] cũng đã chạy thành công; dữ liệu thử đã được xóa. Bộ kiểm thử local: 42 test; frontend production build đạt.
 
 Supabase Security Advisor còn cảnh báo có sẵn ở hàm match_document_chunks (search_path), handle_new_user (quyền EXECUTE) và cấu hình kiểm tra mật khẩu rò rỉ. Các mục này không được thay đổi trong phần tích hợp Storage. Các bảng ứng dụng bật RLS không có policy vì truy cập thông qua backend service role.
-#   u t c - r a g - c h a t b o t -  
+#   u t c - r a g - c h a t b o t - 
  
+ 
+
+## Cơ sở dữ liệu quan hệ cho ngành học
+
+Danh mục ngành học hiện dùng các bảng quan hệ trong Supabase PostgreSQL:
+
+- `major_definitions`: mã ngành và tên ngành, duy nhất theo mã ngành.
+- `admission_programs`: chương trình tuyển sinh, năm, cơ sở, mã xét tuyển, chỉ tiêu, nguồn; khóa ngoại `major_id` trỏ tới ngành.
+- `admission_methods` và `program_methods`: phương thức tuyển sinh và liên kết nhiều-nhiều với chương trình.
+- `subject_groups` và `program_subject_groups`: tổ hợp môn và liên kết nhiều-nhiều với chương trình.
+- `major_catalogue`: view đọc ghép các bảng trên để API trả cấu trúc cũ cho giao diện.
+
+`save_major`, `delete_major` và `import_majors` là hàm PostgreSQL `SECURITY INVOKER`. Mỗi thao tác ghi gồm nhiều bảng được thực hiện trong một giao dịch. API chỉ cho admin gọi các hàm ghi; trình duyệt không có quyền ghi bảng. Bảng và view được cấu hình RLS/quyền truy cập theo [hướng dẫn Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+Dữ liệu cũ trong bảng `majors` **được giữ nguyên** để đối chiếu hoặc khôi phục. CRUD hiện đọc/ghi các bảng quan hệ; bảng cũ là snapshot và không tự cập nhật sau khi admin sửa dữ liệu mới. Việc đổi tên một mã ngành từ form admin cập nhật tên chung của mã ngành đó trong mọi chương trình liên quan.
+
+### Thiết lập trên dự án Supabase khác
+
+Chạy `supabase/majors.sql` trước, rồi `supabase/majors_relational.sql` trong SQL Editor. Script thứ hai tạo bảng và hàm quan hệ, sao chép dữ liệu cũ, giữ nguyên ID chương trình và bảng cũ. Dự án Supabase đang cấu hình đã được nâng cấp và đối chiếu dữ liệu.
+
+Từ thư mục `backend`, có thể kiểm tra rồi nhập JSON:
+
+```powershell
+.venv\Scripts\python scripts/import_majors.py "duong-dan-tep.json"
+.venv\Scripts\python scripts/import_majors.py "duong-dan-tep.json" --apply
+```
+
+Tệp người dùng cung cấp đã được nhập: 85 chương trình gồm 56 Hà Nội và 29 TP.HCM. Nhập lại bỏ qua 85 bản ghi đã có, không ghi đè chỉnh sửa của admin. JSON tối đa 2 MB và 1.000 chương trình/lần qua API.
+
+User dùng `/majors` để xem, tìm, lọc và đọc chi tiết. Admin dùng tab “Ngành học” trong `/admin` để thêm, sửa, ẩn/hiện, xóa và nhập JSON. API: `GET /majors`, `GET /majors/{id}`, `GET/POST /admin/majors`, `PATCH/DELETE /admin/majors/{id}`, `POST /admin/majors/import`.
+
+Danh mục ngành học chưa tự đồng bộ embedding cho chatbot RAG; cần cập nhật tài liệu RAG riêng nếu muốn chatbot dùng dữ liệu mới.
+
+Xác minh: 63 kiểm thử backend đạt. Kiểm thử API trên Supabase thật đã kiểm tra CRUD, ẩn khỏi user, khóa ngoại, liên kết phương thức/tổ hợp, xóa bản ghi tạm và nhập lại không ghi đè. 85 bản ghi view quan hệ khớp snapshot cũ; không có liên kết mồ côi.
+
+## Hướng dẫn hồ sơ tân sinh viên
+
+Trang /freshmen cho người dùng xem bảng hồ sơ và minh chứng ưu tiên theo khóa, mở đúng trang trong PDF gốc. Người dùng không có thao tác ghi. Tab “Tân sinh viên” tại /admin cho admin tạo khóa kèm PDF, sửa thông tin/công bố, xóa khóa và thêm/sửa/ẩn/xóa từng mục. Các API ghi kiểm tra tài khoản admin Supabase Auth.
+
+Dữ liệu được lưu trong hai bảng quan hệ freshman_guides và freshman_items (khóa ngoại guide_id) trên Supabase PostgreSQL. PDF gốc nằm trong bucket riêng tư admission-documents ở thư mục freshmen/<khóa>/; backend chỉ trả PDF cho khóa đã công bố. Chạy supabase/freshmen.sql khi cài đặt dự án Supabase khác, sau đó từ thư mục backend:
+
+    .venv\Scripts\python scripts/import_freshmen.py "đường-dẫn-PDF" data/freshmen_k67.json
+    .venv\Scripts\python scripts/import_freshmen.py "đường-dẫn-PDF" data/freshmen_k67.json --apply
+
+Dự án Supabase hiện tại đã được khởi tạo dữ liệu K67: 9 mục hồ sơ và 14 mục minh chứng ưu tiên từ PDF người dùng cung cấp. Lệnh nhập lại bỏ qua các mục đã có để giữ chỉnh sửa của admin. Nội dung áp dụng tùy năm tốt nghiệp, phương thức xét tuyển hoặc đối tượng ưu tiên; người xem cần đối chiếu PDF gốc.

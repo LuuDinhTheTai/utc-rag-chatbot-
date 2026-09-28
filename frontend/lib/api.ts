@@ -3,7 +3,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API}${path}`, {...init, signal: AbortSignal.timeout(120000)});
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const labels: Record<string, string> = {title: 'Tiêu đề', source_url: 'URL nguồn', admission_year: 'Năm tuyển sinh', campus: 'Cơ sở', text: 'Nội dung', category: 'Loại tài liệu'};
+    const labels: Record<string, string> = {admission_code: 'Mã xét tuyển', major_code: 'Mã ngành', name: 'Tên ngành', program_name: 'Tên chương trình', quota: 'Chỉ tiêu', methods: 'Phương thức', subject_groups: 'Tổ hợp môn', title: 'Tiêu đề', source_url: 'URL nguồn', admission_year: 'Năm tuyển sinh', campus: 'Cơ sở', text: 'Nội dung', category: 'Loại tài liệu'};
     const detail = body?.detail;
     const message = typeof detail === 'string' ? detail : Array.isArray(detail)
       ? detail.map((item: {loc?: (string | number)[]; msg?: string; type?: string; ctx?: Record<string, number>}) => {

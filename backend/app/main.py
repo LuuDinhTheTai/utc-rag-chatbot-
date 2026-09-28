@@ -324,3 +324,10 @@ def delete_document(document_id: UUID, uid=Depends(admin)):
 def review(uid=Depends(admin)):
     return {'unanswered': db().table('messages').select('*').eq('role', 'assistant').eq('supported', False).order('created_at', desc=True).limit(100).execute().data,
             'feedback': db().table('feedback').select('*,messages(content,sources)').order('created_at', desc=True).limit(100).execute().data}
+
+
+from .majors import make_router
+app.include_router(make_router(db, admin))
+
+from .freshmen import make_router as make_freshmen_router
+app.include_router(make_freshmen_router(db, admin))

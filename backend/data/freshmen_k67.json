@@ -1,0 +1,214 @@
+{
+  "cohort": "K67",
+  "admission_year": 2026,
+  "title": "Hướng dẫn tân sinh viên K67 chuẩn bị hồ sơ sinh viên và minh chứng ưu tiên",
+  "items": [
+    {
+      "code": "01",
+      "category": "document",
+      "title": "Giấy chứng nhận kết quả thi tốt nghiệp THPT năm 2026",
+      "applies_to": "Bản gốc: thí sinh tốt nghiệp năm 2026 xét tuyển theo bất kỳ phương thức nào; thí sinh tốt nghiệp trước năm 2026 dùng kết quả thi để xét tuyển.",
+      "evidence": "Nộp bản gốc giấy chứng nhận kết quả thi.",
+      "source_page": 1,
+      "sort_order": 1
+    },
+    {
+      "code": "02",
+      "category": "document",
+      "title": "Giấy chứng nhận tốt nghiệp hoặc bằng tốt nghiệp THPT",
+      "applies_to": "Tốt nghiệp THPT năm 2026: giấy chứng nhận tốt nghiệp THPT năm 2026. Tốt nghiệp trước năm 2026: 01 bản sao công chứng bằng tốt nghiệp THPT.",
+      "evidence": "Chuẩn bị đúng loại giấy theo năm tốt nghiệp.",
+      "source_page": 1,
+      "sort_order": 2
+    },
+    {
+      "code": "03",
+      "category": "document",
+      "title": "Chứng chỉ ngoại ngữ hoặc giấy chứng nhận giải học sinh giỏi",
+      "applies_to": "Thí sinh được cộng điểm thưởng.",
+      "evidence": "Bản công chứng chứng chỉ IELTS hoặc giấy chứng nhận đạt giải học sinh giỏi môn văn hóa cấp tỉnh/thành phố, nếu dùng để cộng điểm.",
+      "source_page": 1,
+      "sort_order": 3
+    },
+    {
+      "code": "04",
+      "category": "document",
+      "title": "Phiếu điểm môn Vẽ Mỹ thuật",
+      "applies_to": "Thí sinh dùng tổ hợp V00 hoặc V01 xét tuyển ngành Kiến trúc.",
+      "evidence": "Bản công chứng phiếu điểm môn Vẽ Mỹ thuật.",
+      "source_page": 1,
+      "sort_order": 4
+    },
+    {
+      "code": "05",
+      "category": "document",
+      "title": "Giấy tờ chứng minh đối tượng ưu tiên",
+      "applies_to": "Thí sinh thuộc đối tượng ưu tiên.",
+      "evidence": "Minh chứng tương ứng đối tượng 01–06 trong bảng ưu tiên của hướng dẫn này.",
+      "source_page": 1,
+      "sort_order": 5
+    },
+    {
+      "code": "06",
+      "category": "document",
+      "title": "Học bạ THPT",
+      "applies_to": "Tân sinh viên chuẩn bị hồ sơ.",
+      "evidence": "01 bản sao công chứng học bạ THPT.",
+      "source_page": 1,
+      "sort_order": 6
+    },
+    {
+      "code": "07",
+      "category": "document",
+      "title": "Căn cước công dân và giấy khai sinh",
+      "applies_to": "Tân sinh viên chuẩn bị hồ sơ.",
+      "evidence": "01 bản sao công chứng căn cước công dân; 01 bản giấy khai sinh hoặc trích lục khai sinh.",
+      "source_page": 1,
+      "sort_order": 7
+    },
+    {
+      "code": "08",
+      "category": "document",
+      "title": "Sổ Đoàn và giấy chuyển sinh hoạt Đoàn, Đảng",
+      "applies_to": "Nếu là Đoàn viên hoặc Đảng viên.",
+      "evidence": "Sổ Đoàn và giấy chuyển sinh hoạt Đoàn, Đảng tương ứng.",
+      "source_page": 1,
+      "sort_order": 8
+    },
+    {
+      "code": "09",
+      "category": "document",
+      "title": "Giấy tờ nghĩa vụ quân sự",
+      "applies_to": "Thí sinh nam giới.",
+      "evidence": "Giấy chứng nhận đăng ký nghĩa vụ quân sự và giấy giới thiệu di chuyển nghĩa vụ quân sự do Ban chỉ huy quân sự xã/phường cấp.",
+      "source_page": 1,
+      "sort_order": 9
+    },
+    {
+      "code": "01",
+      "category": "priority",
+      "title": "Đối tượng 01 · Người dân tộc thiểu số được hưởng ưu tiên khu vực 1",
+      "applies_to": "Công dân Việt Nam là người dân tộc thiểu số được hưởng ưu tiên khu vực 1.",
+      "evidence": "Giấy khai sinh hoặc quyết định xác định lại dân tộc của cấp có thẩm quyền.",
+      "source_page": 2,
+      "sort_order": 1
+    },
+    {
+      "code": "02a",
+      "category": "priority",
+      "title": "Đối tượng 02a · Thương binh, bệnh binh và người hưởng chính sách tương tự",
+      "applies_to": "Thương binh, bệnh binh hoặc người có giấy chứng nhận được hưởng chính sách như thương binh.",
+      "evidence": "Giấy chứng nhận thương binh, bệnh binh hoặc giấy chứng nhận hưởng chính sách như thương binh.",
+      "source_page": 2,
+      "sort_order": 2
+    },
+    {
+      "code": "02b",
+      "category": "priority",
+      "title": "Đối tượng 02b · Quân nhân, công an xuất ngũ hoàn thành nghĩa vụ",
+      "applies_to": "Quân nhân; sĩ quan, hạ sĩ quan, chiến sĩ nghĩa vụ trong công an nhân dân xuất ngũ và được công nhận hoàn thành nghĩa vụ phục vụ tại ngũ.",
+      "evidence": "Quyết định xuất ngũ.",
+      "source_page": 2,
+      "sort_order": 3
+    },
+    {
+      "code": "03a",
+      "category": "priority",
+      "title": "Đối tượng 03a · Thân nhân liệt sĩ",
+      "applies_to": "Thân nhân liệt sĩ.",
+      "evidence": "Giấy khai sinh; bản sao Bằng Tổ quốc ghi công; Bản khai tình hình thân nhân liệt sĩ (Mẫu số 05 theo Nghị định 131/2021/NĐ-CP); quyết định cấp Giấy chứng nhận gia đình liệt sĩ và trợ cấp tiền tuất.",
+      "source_page": 2,
+      "sort_order": 4
+    },
+    {
+      "code": "03b",
+      "category": "priority",
+      "title": "Đối tượng 03b · Con người suy giảm khả năng lao động từ 81% trở lên",
+      "applies_to": "Con thương binh, bệnh binh hoặc người hưởng chính sách như thương binh bị suy giảm khả năng lao động từ 81% trở lên.",
+      "evidence": "Giấy khai sinh và giấy chứng nhận thương binh hoặc giấy chứng nhận hưởng chính sách như thương binh có tỷ lệ mất sức lao động từ 81% trở lên.",
+      "source_page": 2,
+      "sort_order": 5
+    },
+    {
+      "code": "03c",
+      "category": "priority",
+      "title": "Đối tượng 03c · Con người hoạt động kháng chiến bị nhiễm chất độc hóa học",
+      "applies_to": "Cha/mẹ bị suy giảm khả năng lao động từ 81% trở lên do nhiễm chất độc hóa học.",
+      "evidence": "Giấy khai sinh và giấy chứng nhận người hoạt động kháng chiến bị nhiễm chất độc hóa học do cơ quan có thẩm quyền cấp.",
+      "source_page": 2,
+      "sort_order": 6
+    },
+    {
+      "code": "03d",
+      "category": "priority",
+      "title": "Đối tượng 03d · Con Anh hùng",
+      "applies_to": "Con Anh hùng Lực lượng vũ trang nhân dân hoặc Anh hùng Lao động trong thời kỳ kháng chiến.",
+      "evidence": "Giấy khai sinh và quyết định công nhận Anh hùng Lực lượng vũ trang hoặc Anh hùng Lao động trong thời kỳ kháng chiến.",
+      "source_page": 2,
+      "sort_order": 7
+    },
+    {
+      "code": "03e",
+      "category": "priority",
+      "title": "Đối tượng 03đ · Con người bị di chứng chất độc hóa học",
+      "applies_to": "Con người hoạt động kháng chiến bị dị dạng, dị tật do chất độc hóa học đang hưởng trợ cấp hàng tháng.",
+      "evidence": "Giấy khai sinh và quyết định trợ cấp hàng tháng của con người hoạt động kháng chiến bị dị dạng, dị tật do chất độc hóa học.",
+      "source_page": 2,
+      "sort_order": 8
+    },
+    {
+      "code": "04a",
+      "category": "priority",
+      "title": "Đối tượng 04a · Thanh niên xung phong được cử đi học",
+      "applies_to": "Thanh niên xung phong tập trung được cử đi học.",
+      "evidence": "Giấy xác nhận của đơn vị cử đi học.",
+      "source_page": 3,
+      "sort_order": 9
+    },
+    {
+      "code": "04b",
+      "category": "priority",
+      "title": "Đối tượng 04b · Quân nhân hoặc công an tại ngũ được cử đi học",
+      "applies_to": "Quân nhân; sĩ quan, hạ sĩ quan, chiến sĩ nghĩa vụ trong công an nhân dân tại ngũ được cử đi học, có thời gian phục vụ trên 15 tháng tính theo ngày.",
+      "evidence": "Giấy xác nhận của đơn vị cử đi học từ cấp Trung đoàn (hoặc tương đương) trở lên; hoặc bản sao lệnh gọi nhập ngũ; hoặc xác nhận của đơn vị công an/địa phương nơi sơ tuyển.",
+      "source_page": 3,
+      "sort_order": 10
+    },
+    {
+      "code": "05a",
+      "category": "priority",
+      "title": "Đối tượng 05a · Người dân tộc thiểu số ngoài khu vực đối tượng 01",
+      "applies_to": "Công dân Việt Nam là người dân tộc thiểu số học ngoài khu vực quy định cho đối tượng 01.",
+      "evidence": "Giấy khai sinh hoặc quyết định xác định lại dân tộc của cấp có thẩm quyền.",
+      "source_page": 3,
+      "sort_order": 11
+    },
+    {
+      "code": "05b",
+      "category": "priority",
+      "title": "Đối tượng 05b · Con người suy giảm khả năng lao động dưới 81%",
+      "applies_to": "Con thương binh, bệnh binh hoặc người hưởng chính sách như thương binh bị suy giảm khả năng lao động dưới 81%.",
+      "evidence": "Giấy khai sinh và giấy chứng nhận thương binh, bệnh binh hoặc giấy chứng nhận hưởng chính sách như thương binh do cơ quan có thẩm quyền cấp.",
+      "source_page": 3,
+      "sort_order": 12
+    },
+    {
+      "code": "05c",
+      "category": "priority",
+      "title": "Đối tượng 05c · Con người hoạt động kháng chiến bị nhiễm chất độc hóa học",
+      "applies_to": "Cha/mẹ bị suy giảm khả năng lao động dưới 81% do nhiễm chất độc hóa học.",
+      "evidence": "Giấy khai sinh và giấy chứng nhận người hoạt động kháng chiến bị nhiễm chất độc hóa học do cơ quan có thẩm quyền cấp.",
+      "source_page": 3,
+      "sort_order": 13
+    },
+    {
+      "code": "06",
+      "category": "priority",
+      "title": "Đối tượng 06 · Người khuyết tật nặng",
+      "applies_to": "Người khuyết tật nặng có giấy xác nhận khuyết tật của cơ quan có thẩm quyền.",
+      "evidence": "Giấy xác nhận Khuyết tật nặng của UBND xã/phường/thị trấn nơi thí sinh thường trú.",
+      "source_page": 3,
+      "sort_order": 14
+    }
+  ]
+}
