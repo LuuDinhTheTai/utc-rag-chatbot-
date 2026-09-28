@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+supabase
+langchain-google-genai
+langchain-text-splitters
+pydantic-settings
+python-multipart
+pypdf
+beautifulsoup4
+httpx
+pytest
