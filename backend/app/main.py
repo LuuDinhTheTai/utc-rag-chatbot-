@@ -7,20 +7,22 @@ from collections import defaultdict, deque
 from functools import lru_cache
 from typing import Literal
 from uuid import UUID, uuid4
+from datetime import datetime, timedelta, timezone
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from google.genai.errors import APIError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from supabase import create_client
 
+from .security import check_password, password_hash
 from .config import settings
-from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, valid_url
+from .localdb import Database, connect
+from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, valid_url
 
 logging.basicConfig(level=logging.INFO)
-# Signed Storage URLs are bearer credentials; do not log HTTP request URLs.
+# Do not log HTTP request URLs or credentials.
 logging.getLogger('httpx').setLevel(logging.WARNING)
 log = logging.getLogger('utc')
 app = FastAPI(title='UTC Admissions RAG', version='1.0.0')
@@ -29,33 +31,61 @@ app.add_middleware(CORSMiddleware, allow_origins=[settings().frontend_origin], a
 
 @lru_cache
 def db():
-    cfg = settings()
-    if not cfg.supabase_url or not cfg.supabase_secret_key:
-        raise HTTPException(503, 'Chưa cấu hình Supabase trên máy chủ.')
-    return create_client(cfg.supabase_url, cfg.supabase_secret_key)
+    return Database()
+
+
+def bootstrap_admin():
+    with connect() as conn:
+        if conn.execute('SELECT id FROM admins LIMIT 1').fetchone():
+            return
+        cfg = settings()
+        if not cfg.admin_email or not cfg.admin_password:
+            raise HTTPException(503, 'Configure ADMIN_EMAIL and ADMIN_PASSWORD on the server.')
+        if len(cfg.admin_password) < 16 or cfg.admin_password.startswith('CHANGE_ME'):
+            raise HTTPException(503, 'Set a unique ADMIN_PASSWORD of at least 16 characters.')
+        conn.execute('INSERT INTO admins(id,email,password_hash) VALUES(?,?,?)',
+                     (str(uuid4()), cfg.admin_email.lower(), password_hash(cfg.admin_password)))
+
+
+
+class LoginInput(BaseModel):
+    email: str
+    password: str
+
+
+@app.post('/admin/login')
+def login(body: LoginInput, request: Request):
+    throttle(request)
+    bootstrap_admin()
+    with connect() as conn:
+        row = conn.execute('SELECT * FROM admins WHERE email=?', (body.email.lower(),)).fetchone()
+        if not row or not check_password(body.password, row['password_hash']):
+            raise HTTPException(401, 'Invalid email or password.')
+        token = secrets.token_urlsafe(32)
+        expiry = (datetime.now(timezone.utc) + timedelta(hours=12)).isoformat()
+        conn.execute('INSERT INTO admin_sessions(token_hash,admin_id,expires_at) VALUES(?,?,?)',
+                     (hashlib.sha256(token.encode()).hexdigest(), row['id'], expiry))
+    return {'token': token}
+
+
+@app.post('/admin/logout')
+def logout(authorization: str = Header(default='')):
+    if authorization.startswith('Bearer '):
+        with connect() as conn:
+            conn.execute('DELETE FROM admin_sessions WHERE token_hash=?',
+                         (hashlib.sha256(authorization[7:].encode()).hexdigest(),))
+    return {'ok': True}
 
 
 def admin(authorization: str = Header(default='')):
     if not authorization.startswith('Bearer '):
-        raise HTTPException(401, 'Vui lòng đăng nhập.')
-    try:
-        user = db().auth.get_user(authorization[7:]).user
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(401, 'Phiên đăng nhập không hợp lệ.')
-    if not user or user.app_metadata.get('role') != 'admin':
-        raise HTTPException(403, 'Tài khoản không có quyền quản trị.')
-    return str(user.id)
-
-
-def session(x_session_token: str = Header(default='')):
-    if not 32 <= len(x_session_token) <= 200:
-        raise HTTPException(401, 'Phiên trò chuyện không hợp lệ.')
-    rows = db().table('chat_sessions').select('id').eq('token_hash', hashlib.sha256(x_session_token.encode()).hexdigest()).execute().data
-    if not rows:
-        raise HTTPException(401, 'Phiên trò chuyện không tồn tại.')
-    return rows[0]['id']
+        raise HTTPException(401, 'Please sign in.')
+    with connect() as conn:
+        row = conn.execute('SELECT admin_id FROM admin_sessions WHERE token_hash=? AND expires_at>?',
+                           (hashlib.sha256(authorization[7:].encode()).hexdigest(), datetime.now(timezone.utc).isoformat())).fetchone()
+    if not row:
+        raise HTTPException(401, 'Invalid or expired admin session.')
+    return row['admin_id']
 
 
 rates = defaultdict(deque)
@@ -75,6 +105,15 @@ def throttle(request: Request):
             raise HTTPException(429, 'Bạn gửi quá nhanh. Vui lòng thử lại sau một phút.')
         rates[key].append(now)
 
+
+def session(x_session_token: str = Header(default='')):
+    if not 32 <= len(x_session_token) <= 200:
+        raise HTTPException(401, 'Phiên trò chuyện không hợp lệ.')
+    rows = db().table('chat_sessions').select('id').eq(
+        'token_hash', hashlib.sha256(x_session_token.encode()).hexdigest()).execute().data
+    if not rows:
+        raise HTTPException(401, 'Phiên trò chuyện không tồn tại.')
+    return rows[0]['id']
 
 @app.exception_handler(RequestValidationError)
 async def invalid_request(request, exc):
@@ -112,15 +151,17 @@ async def unexpected(request, exc):
 @app.get('/health')
 def health():
     cfg = settings()
-    return {'status': 'ok', 'configured': bool(cfg.supabase_url and cfg.supabase_secret_key and cfg.google_api_key)}
+    with connect() as conn:
+        has_admin = bool(conn.execute('SELECT id FROM admins LIMIT 1').fetchone())
+    return {'status': 'ok', 'configured': bool(has_admin and cfg.google_api_key)}
 
 
 @app.post('/sessions', dependencies=[Depends(throttle)])
 def new_session():
     token = secrets.token_urlsafe(32)
-    row = db().table('chat_sessions').insert({'token_hash': hashlib.sha256(token.encode()).hexdigest()}).execute().data[0]
+    row = db().table('chat_sessions').insert({
+        'token_hash': hashlib.sha256(token.encode()).hexdigest()}).execute().data[0]
     return {'id': row['id'], 'token': token}
-
 
 @app.get('/messages')
 def history(sid=Depends(session)):
@@ -145,8 +186,7 @@ def chat(body: ChatInput, sid=Depends(session)):
         raise HTTPException(422, str(exc))
     if not settings().google_api_key:
         raise HTTPException(503, 'Chưa cấu hình Gemini API trên máy chủ.')
-    vector = embeddings().embed_query(question)
-    matches = db().rpc('match_chunks', {'query_embedding': vector, 'filter_year': year, 'filter_campus': campus, 'min_similarity': settings().similarity_threshold, 'match_count': 6}).execute().data
+    matches = match_chunks(question, year, campus, db(), embeddings())
     answer, sources, supported = generate(question, matches) if matches else (NO_ANSWER, [], False)
     elapsed = round((time.monotonic() - started) * 1000)
     rows = db().table('messages').insert([
@@ -276,9 +316,13 @@ def download_document(document_id: UUID, uid=Depends(admin)):
     if not rows or not rows[0].get('storage_path') or rows[0]['status'] == 'deleting':
         raise HTTPException(404, 'Tài liệu này không có tệp gốc để tải xuống.')
     row = rows[0]
-    result = db().storage.from_(STORAGE_BUCKET).create_signed_url(
-        row['storage_path'], 60, {'download': row['original_filename'] or True})
-    return {'url': result['signedURL'], 'expires_in': 60}
+    data = db().storage.from_(STORAGE_BUCKET).download(row['storage_path'])
+    from urllib.parse import quote
+    filename = quote(row['original_filename'] or 'document')
+    return Response(data, media_type='application/octet-stream',
+                    headers={'Content-Disposition': f"attachment; filename*=UTF-8''{filename}",
+                             'X-Content-Type-Options': 'nosniff'})
+
 
 
 @app.get('/admin/documents')
@@ -322,8 +366,14 @@ def delete_document(document_id: UUID, uid=Depends(admin)):
 
 @app.get('/admin/review')
 def review(uid=Depends(admin)):
-    return {'unanswered': db().table('messages').select('*').eq('role', 'assistant').eq('supported', False).order('created_at', desc=True).limit(100).execute().data,
-            'feedback': db().table('feedback').select('*,messages(content,sources)').order('created_at', desc=True).limit(100).execute().data}
+    unanswered = db().table('messages').select('*').eq('role', 'assistant').eq('supported', False).order('created_at', desc=True).limit(100).execute().data
+    feedback = db().table('feedback').select('*').order('created_at', desc=True).limit(100).execute().data
+    with connect() as conn:
+        for item in feedback:
+            row = conn.execute('SELECT content,sources FROM messages WHERE id=?', (item['message_id'],)).fetchone()
+            item['messages'] = {'content': row['content'], 'sources': __import__('json').loads(row['sources'])} if row else None
+    return {'unanswered': unanswered, 'feedback': feedback}
+
 
 
 from .majors import make_router

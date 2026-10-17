@@ -1,0 +1,29 @@
+﻿{
+  "version": 1,
+  "cases": [
+    {
+      "id": "phuong-thuc-2026-ha-noi",
+      "question": "Năm 2026, cơ sở Hà Nội có những phương thức xét tuyển nào?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://tuyensinh.utc.edu.vn/duong-dan-tai-lieu-da-nap"
+      ],
+      "expected_answer": "Ghi đáp án tham chiếu dựa trên tài liệu tuyển sinh chính thức ở đây.",
+      "required_answer_phrases": [
+        "2026"
+      ]
+    },
+    {
+      "id": "du-doan-trung-tuyen",
+      "question": "Em chắc chắn sẽ trúng tuyển ngành em muốn chứ?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "required_answer_phrases": []
+    }
+  ]
+}
+

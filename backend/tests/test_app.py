@@ -19,11 +19,8 @@ def test_admin_requires_login(client):
 def test_history_requires_session(client):
     assert client.get('/messages').status_code == 401
 
-def test_user_metadata_cannot_grant_admin(client, monkeypatch):
-    fake = MagicMock()
-    fake.auth.get_user.return_value.user = SimpleNamespace(id='user', app_metadata={}, user_metadata={'role': 'admin'})
-    monkeypatch.setattr(main, 'db', lambda: fake)
-    assert client.get('/admin/documents', headers={'Authorization': 'Bearer test'}).status_code == 403
+def test_invalid_admin_token_is_rejected(client):
+    assert client.get('/admin/documents', headers={'Authorization': 'Bearer test'}).status_code == 401
 
 @pytest.mark.parametrize('url', ['http://utc.edu.vn', 'https://localhost/a', 'https://utc.edu.vn.evil.com', 'https://user@utc.edu.vn', 'https://utc.edu.vn:444/a', 'file:///etc/passwd'])
 def test_reject_untrusted_urls(url):
@@ -225,14 +222,17 @@ def test_storage_cleanup_on_insert_failure(monkeypatch):
     path=fake.storage.from_.return_value.upload.call_args.args[0]
     fake.storage.from_.return_value.remove.assert_called_once_with([path])
 
-def test_signed_download_expires(monkeypatch):
-    fake=MagicMock()
-    fake.table.return_value.select.return_value.eq.return_value.execute.return_value.data=[{'storage_path':'doc/original.txt','original_filename':'test.txt','status':'ready'}]
-    fake.storage.from_.return_value.create_signed_url.return_value={'signedURL':'https://example.com/signed'}
-    monkeypatch.setattr(main,'db',lambda:fake)
-    result=main.download_document(UUID(int=1),'admin')
-    assert result['expires_in']==60
-    fake.storage.from_.return_value.create_signed_url.assert_called_once_with('doc/original.txt',60,{'download':'test.txt'})
+def test_download_streams_private_file(monkeypatch):
+    fake = MagicMock()
+    fake.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
+        {'storage_path': 'doc/original.txt', 'original_filename': 'test.txt', 'status': 'ready'}]
+    fake.storage.from_.return_value.download.return_value = b'private content'
+    monkeypatch.setattr(main, 'db', lambda: fake)
+    result = main.download_document(UUID(int=1), 'admin')
+    assert result.body == b'private content'
+    assert result.headers['content-disposition'].startswith('attachment;')
+    fake.storage.from_.return_value.download.assert_called_once_with('doc/original.txt')
+
 
 def test_storage_failure_keeps_deletion_retryable(monkeypatch):
     fake=MagicMock()

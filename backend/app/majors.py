@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
-from postgrest.exceptions import APIError
+import sqlite3
 
 from .rag import valid_url
 
@@ -131,8 +131,8 @@ def make_router(db, admin):
                 'p_data': body.model_dump(),
                 'p_id': str(major_id) if major_id else None
             }).execute().data
-        except APIError as exc:
-            if exc.code == '23505':
+        except sqlite3.IntegrityError as exc:
+            if 'UNIQUE' in str(exc):
                 raise HTTPException(409, 'Mã xét tuyển đã tồn tại trong cùng năm và cơ sở.') from exc
             raise
         if row is None:
@@ -163,11 +163,11 @@ def make_router(db, admin):
             rows = parse_catalogue(json.loads(content.decode('utf-8-sig')))
         except (ValueError, TypeError, AttributeError) as exc:
             raise HTTPException(422, str(exc)) from exc
-        # One PostgreSQL transaction; existing admin edits are preserved.
+        # One SQLite transaction; existing admin edits are preserved.
         try:
             return db().rpc('import_majors', {'p_rows': rows}).execute().data
-        except APIError as exc:
-            if exc.code == '23505':
+        except sqlite3.IntegrityError as exc:
+            if 'UNIQUE' in str(exc):
                 raise HTTPException(409, 'JSON chứa mã xét tuyển đã tồn tại trong năm/cơ sở này.') from exc
             raise
 

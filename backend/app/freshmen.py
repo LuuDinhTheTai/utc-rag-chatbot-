@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
-from postgrest.exceptions import APIError
+import sqlite3
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 log = logging.getLogger('utc')
@@ -127,8 +127,8 @@ def make_router(db, admin):
     def write(query):
         try:
             rows = query.execute().data
-        except APIError as exc:
-            if exc.code == '23505':
+        except sqlite3.IntegrityError as exc:
+            if 'UNIQUE' in str(exc):
                 raise HTTPException(409, 'Mã mục đã tồn tại trong nhóm này.') from exc
             raise
         if not rows:

@@ -106,6 +106,18 @@ def chunks(text):
     return RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=180).split_text(text)
 
 
+def match_chunks(question, year, campus, database, embedding_model):
+    """Retrieve the same source chunks for chat and offline evaluation."""
+    vector = embedding_model.embed_query(question)
+    return database.rpc('match_chunks', {
+        'query_embedding': vector,
+        'filter_year': year,
+        'filter_campus': campus,
+        'min_similarity': settings().similarity_threshold,
+        'match_count': 6,
+    }).execute().data
+
+
 class GroundedAnswer(BaseModel):
     answer: str = Field(description='Câu trả lời tiếng Việt, chỉ dùng dữ kiện trong nguồn. Gắn [1], [2] tương ứng nguồn.')
     source_ids: list[int] = Field(description='Số thứ tự các nguồn thực sự hỗ trợ câu trả lời, bắt đầu từ 1.')

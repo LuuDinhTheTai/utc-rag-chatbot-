@@ -13,15 +13,35 @@ export default function ChatPage() {
   const [error, setError] = useState('');
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const token = useRef('');
+  const busyRef = useRef(false);
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    let active = true;
     token.current = localStorage.getItem('utc-session') || '';
-    if (token.current) api<Message[]>('/messages', {headers: {'X-Session-Token': token.current}}).then(setMessages).catch(e => setError(e.message));
+    const storedToken = token.current;
+    if (storedToken) {
+      api<Message[]>('/messages', {headers: {'X-Session-Token': storedToken}})
+        .then(rows => { if (active && token.current === storedToken) setMessages(rows); })
+        .catch(cause => { if (active && token.current === storedToken) setError(cause.message); });
+    }
+    const reset = (event: Event) => {
+      if (busyRef.current) { event.preventDefault(); return; }
+      token.current = '';
+      setMessages([]);
+      setError('');
+      setRatings({});
+    };
+    window.addEventListener('utc:new-chat', reset);
+    return () => { active = false; window.removeEventListener('utc:new-chat', reset); };
   }, []);
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('utc:chat-busy', {detail: busy}));
+    return () => { window.dispatchEvent(new CustomEvent('utc:chat-busy', {detail: false})); };
+  }, [busy]);
   useEffect(() => { end.current?.scrollIntoView({behavior: 'smooth'}); }, [messages, busy]);
   async function send(event: FormEvent) {
     event.preventDefault(); if (busy || question.trim().length < 2) return;
-    const text = question.trim(); setBusy(true); setError('');
+    const text = question.trim(); busyRef.current = true; setBusy(true); setError('');
     try {
       if (!token.current) {
         const session = await api<{token: string}>('/sessions', {method: 'POST'});
@@ -30,7 +50,7 @@ export default function ChatPage() {
       const reply = await api<Message>('/chat', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Session-Token': token.current}, body: JSON.stringify({question: text, year, campus})});
       setMessages(old => [...old, {id: crypto.randomUUID(), role: 'user', content: text}, reply]); setQuestion('');
     } catch (e) { setError(e instanceof Error ? e.message : 'Không thể kết nối máy chủ.'); }
-    finally { setBusy(false); }
+    finally { busyRef.current = false; setBusy(false); }
   }
   async function rate(id: string, rating: number) {
     try {
@@ -38,19 +58,7 @@ export default function ChatPage() {
       setRatings(old => ({...old, [id]: rating}));
     } catch(e) {setError(e instanceof Error ? e.message : 'Không gửi được phản hồi.');}
   }
-  return <div className="shell">
-    <aside className="sidebar">
-      <Link href="/" className="brand"><span className="logo">UTC</span><span>Trợ lý tuyển sinh<small>GIAO THÔNG VẬN TẢI</small></span></Link>
-      <button className="new-chat" disabled={busy} onClick={() => {token.current=''; localStorage.removeItem('utc-session');setMessages([]);setError('');setRatings({});}}>＋ Cuộc trò chuyện mới</button>
-      <div className="sidebar-label">KHÔNG GIAN TRA CỨU</div>
-      <Link className="nav-link" href="/freshmen">▦ &nbsp; Hồ sơ tân sinh viên</Link>
-      <Link className="nav-link" href="/majors">▦ &nbsp; Tra cứu ngành học</Link>
-      <div className="nav-active">◈ &nbsp; Hỏi đáp tuyển sinh</div>
-      <a className="nav-link" href="https://tuyensinh.utc.edu.vn" target="_blank" rel="noreferrer">↗ &nbsp; Cổng tuyển sinh UTC</a>
-      <div className="sidebar-note"><span className="eyebrow">CÓ NGUỒN, CÓ CĂN CỨ</span><p>Mỗi câu trả lời được đối chiếu với tài liệu trong kho tri thức tuyển sinh.</p></div>
-      <Link className="admin-link" href="/admin">⚙ &nbsp; Quản trị tài liệu</Link>
-    </aside>
-    <main className="chat-main">
+  return <main className="chat-main">
       <header className="topbar"><span>Hỏi đáp cùng UTC <span className="tag">AI ASSISTANT</span></span><div className="topbar-links"><Link href="/majors">Ngành học</Link><Link href="/freshmen">Tân sinh viên ↗</Link></div></header>
       <div className="filters"><span>Thông tin áp dụng</span><label>Năm <input aria-label="Năm tuyển sinh" type="number" min="2000" max="2100" value={year} onChange={e => setYear(Number(e.target.value))}/></label><label>Cơ sở <select value={campus} onChange={e => setCampus(e.target.value)}><option value="hanoi">Hà Nội</option><option value="hcm">TP. Hồ Chí Minh</option></select></label></div>
       <section className="conversation" aria-live="polite">
@@ -59,6 +67,5 @@ export default function ChatPage() {
         {busy && <div className="loading">✦ Đang tìm nguồn và soạn câu trả lời…</div>}<div ref={end}/>
       </section>
       <div className="composer-wrap">{error && <div className="error" role="alert">{error}</div>}<form className="composer" onSubmit={send}><textarea aria-label="Câu hỏi tuyển sinh" placeholder="Bạn muốn tìm hiểu điều gì về tuyển sinh UTC?" maxLength={2000} value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => {if(e.key==='Enter' && !e.shiftKey && !e.nativeEvent.isComposing){e.preventDefault();e.currentTarget.form?.requestSubmit();}}}/><button disabled={busy || question.trim().length < 2} type="submit" aria-label="Gửi câu hỏi">↑</button></form><p className="disclaimer">Thông tin mang tính tham khảo. Luôn đối chiếu thông báo chính thức trước khi đăng ký.</p></div>
-    </main>
-  </div>;
+  </main>;
 }

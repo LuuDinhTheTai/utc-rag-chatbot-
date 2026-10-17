@@ -7,7 +7,6 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-from postgrest.exceptions import APIError
 
 from app.main import app
 from app.majors import MajorInput, make_router, parse_catalogue
@@ -69,7 +68,7 @@ def test_crud(catalogue):
 
 def test_duplicate_is_conflict(catalogue):
     client,fake,query=catalogue
-    fake.rpc.return_value.execute.side_effect=APIError({'code':'23505','message':'duplicate','details':None,'hint':None})
+    fake.rpc.return_value.execute.side_effect=__import__('sqlite3').IntegrityError('UNIQUE constraint failed')
     assert client.post('/admin/majors',json=BODY).status_code==409
 
 @pytest.mark.parametrize('field,value',[('quota',-1),('admission_year',1999),('name',' '),('campus','other'),('source_url','javascript:alert(1)'),('subject_groups',['INVALID,VALUE'])])
