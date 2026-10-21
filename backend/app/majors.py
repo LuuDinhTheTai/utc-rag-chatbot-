@@ -88,7 +88,8 @@ def parse_catalogue(data):
     return rows
 
 
-def make_router(db, admin):
+def make_router(db, admin, can_edit=None):
+    can_edit = can_edit or admin
     router = APIRouter(tags=['Ngành học'])
 
     def listing(q, year, campus, page, page_size, include_hidden=False):
@@ -140,22 +141,22 @@ def make_router(db, admin):
         return row
 
     @router.post('/admin/majors', status_code=201)
-    def create(body: MajorInput, uid=Depends(admin)):
+    def create(body: MajorInput, uid=Depends(can_edit)):
         return save(body)
 
     @router.patch('/admin/majors/{major_id}')
-    def update(major_id: UUID, body: MajorInput, uid=Depends(admin)):
+    def update(major_id: UUID, body: MajorInput, uid=Depends(can_edit)):
         return save(body, major_id)
 
     @router.delete('/admin/majors/{major_id}')
-    def delete(major_id: UUID, uid=Depends(admin)):
+    def delete(major_id: UUID, uid=Depends(can_edit)):
         deleted = db().rpc('delete_major', {'p_id': str(major_id)}).execute().data
         if not deleted:
             raise HTTPException(404, 'Ngành học không còn tồn tại.')
         return {'deleted': True}
 
     @router.post('/admin/majors/import')
-    def import_json(file: UploadFile = File(...), uid=Depends(admin)):
+    def import_json(file: UploadFile = File(...), uid=Depends(can_edit)):
         content = file.file.read(2_000_001)
         if len(content) > 2_000_000:
             raise HTTPException(422, 'JSON tối đa 2 MB.')

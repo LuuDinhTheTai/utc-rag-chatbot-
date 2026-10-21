@@ -1,0 +1,1651 @@
+{
+  "metadata": {
+    "source_url": "https://tuyensinh.utc.edu.vn/?q=tin-tuyen-sinh/th%C3%B4ng-tin-tuy%E1%BB%83n-sinh-%C4%91%E1%BA%A1i-h%E1%BB%8Dc-h%E1%BB%87-ch%C3%ADnh-quy-2026",
+    "source_title": "Thông tin tuyển sinh đại học hệ chính quy 2026 - Trường Đại học Giao thông vận tải",
+    "admission_year": 2026,
+    "scope": "Các mã xét tuyển đại học chính quy tại Hà Nội (GHA) và Phân hiệu TP.HCM (GSA), gồm chương trình liên kết quốc tế được công bố trong bảng chỉ tiêu.",
+    "retrieved_on": "2026-10-17",
+    "note": "Chỉ tiêu là số lượng tuyển dự kiến theo thông báo 2026. Hai chương trình LKQT tuyển sinh theo thông báo riêng của Nhà trường."
+  },
+  "chi_tieu_2026": {
+    "GHA": {
+      "programs": [
+        {
+          "ma_xet_tuyen": "GHA01",
+          "ma_nganh": "7220201",
+          "ten_nganh": "Ngôn ngữ Anh",
+          "ten_chuong_trinh_nganh": "Ngôn ngữ Anh",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "D01",
+            "D09",
+            "D10"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3, thí sinh phải chọn thi môn tiếng Anh trong phần thi thứ ba;"
+        },
+        {
+          "ma_xet_tuyen": "GHA02",
+          "ma_nganh": "7460112",
+          "ten_nganh": "Toán ứng dụng",
+          "ten_chuong_trinh_nganh": "Toán ứng dụng (Chuyên ngành Toán tin ứng dụng)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA03",
+          "ma_nganh": "7310101",
+          "ten_nganh": "Kinh tế",
+          "ten_chuong_trinh_nganh": "Kinh tế (Chuyên ngành: Kinh tế và quản lý đầu tư, Kinh tế bưu chính viễn thông)",
+          "chi_tieu_du_kien": 75,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA04",
+          "ma_nganh": "7340101",
+          "ten_nganh": "Quản trị kinh doanh",
+          "ten_chuong_trinh_nganh": "Quản trị kinh doanh",
+          "chi_tieu_du_kien": 70,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA05",
+          "ma_nganh": "7340201",
+          "ten_nganh": "Tài chính-Ngân hàng",
+          "ten_chuong_trinh_nganh": "Tài chính - Ngân hàng",
+          "chi_tieu_du_kien": 65,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA06",
+          "ma_nganh": "7340301",
+          "ten_nganh": "Kế toán",
+          "ten_chuong_trinh_nganh": "Kế toán (Chuyên ngành Kế toán tổng hợp)",
+          "chi_tieu_du_kien": 70,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA07",
+          "ma_nganh": "7810103",
+          "ten_nganh": "Quản trị dịch vụ du lịch và lữ hành",
+          "ten_chuong_trinh_nganh": "Quản trị dịch vụ du lịch và lữ hành",
+          "chi_tieu_du_kien": 70,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA08",
+          "ma_nganh": "7840101",
+          "ten_nganh": "Khai thác vận tải",
+          "ten_chuong_trinh_nganh": "Khai thác vận tải (Chuyên ngành: Vận tải - Thương mại quốc tế, Quy hoạch và quản lý GTVT đô thị, Vận tải - Kinh tế đường bộ và thành phố, Vận tải đường sắt)",
+          "chi_tieu_du_kien": 120,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA09",
+          "ma_nganh": "7840104",
+          "ten_nganh": "Kinh tế vận tải",
+          "ten_chuong_trinh_nganh": "Kinh tế vận tải (Chuyên ngành: Kinh tế vận tải ô tô, Kinh tế vận tải hàng không, Kinh tế vận tải đường sắt, Kinh tế vận tải thuỷ bộ)",
+          "chi_tieu_du_kien": 140,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA10",
+          "ma_nganh": "7510605",
+          "ten_nganh": "Logistics và Quản lý chuỗi cung ứng",
+          "ten_chuong_trinh_nganh": "Logistics và quản lý chuỗi cung ứng",
+          "chi_tieu_du_kien": 65,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA11",
+          "ma_nganh": "7580301",
+          "ten_nganh": "Kinh tế xây dựng",
+          "ten_chuong_trinh_nganh": "Kinh tế xây dựng (Chuyên ngành: Kinh tế và quản lý cơ sở hạ tầng, Kinh tế và quản lý đầu tư xây dựng)",
+          "chi_tieu_du_kien": 120,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA12",
+          "ma_nganh": "7580302",
+          "ten_nganh": "Quản lý xây dựng",
+          "ten_chuong_trinh_nganh": "Quản lý xây dựng (Chuyên ngành Quản lý dự án)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA13",
+          "ma_nganh": "7480101",
+          "ten_nganh": "Khoa học máy tính",
+          "ten_chuong_trinh_nganh": "Khoa học máy tính",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA14",
+          "ma_nganh": "7480201",
+          "ten_nganh": "Công nghệ thông tin",
+          "ten_chuong_trinh_nganh": "Công nghệ thông tin",
+          "chi_tieu_du_kien": 180,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA15",
+          "ma_nganh": "7480107",
+          "ten_nganh": "Trí tuệ nhân tạo",
+          "ten_chuong_trinh_nganh": "Trí tuệ nhân tạo",
+          "chi_tieu_du_kien": 40,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA16",
+          "ma_nganh": "7520103",
+          "ten_nganh": "Kỹ thuật cơ khí",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ khí (Chuyên ngành: Công nghệ chế tạo cơ khí, Tự động hoá thiết kế cơ khí)",
+          "chi_tieu_du_kien": 75,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D07",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3 và tổ hợp D07 (PT1), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA17",
+          "ma_nganh": "7520114",
+          "ten_nganh": "Kỹ thuật cơ điện tử",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ điện tử",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D07",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA18",
+          "ma_nganh": "7520115",
+          "ten_nganh": "Kỹ thuật nhiệt",
+          "ten_chuong_trinh_nganh": "Kỹ thuật nhiệt (Chuyên ngành Kỹ thuật nhiệt lạnh và điều hoà không khí)",
+          "chi_tieu_du_kien": 70,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D07",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3 và tổ hợp D07 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA19",
+          "ma_nganh": "7520116",
+          "ten_nganh": "Kỹ thuật cơ khí động lực",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ khí động lực (Chuyên ngành: Kỹ thuật phương tiện đường sắt, Máy xây dựng, Kỹ thuật máy động lực)",
+          "chi_tieu_du_kien": 150,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D07",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA20",
+          "ma_nganh": "7520130",
+          "ten_nganh": "Kỹ thuật ô tô",
+          "ten_chuong_trinh_nganh": "Kỹ thuật ô tô",
+          "chi_tieu_du_kien": 180,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D07",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3 và tổ hợp D07 (PT1), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA21",
+          "ma_nganh": "7520201",
+          "ten_nganh": "Kỹ thuật điện",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện (Chuyên ngành: Trang bị điện trong công nghiệp và GTVT, Hệ thống điện trong giao thông và công nghiệp)",
+          "chi_tieu_du_kien": 70,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA22",
+          "ma_nganh": "7520207",
+          "ten_nganh": "Kỹ thuật điện tử - viễn thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện tử - viễn thông (Chuyên ngành: Kỹ thuật viễn thông, Kỹ thuật thông tin và truyền thông)",
+          "chi_tieu_du_kien": 140,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA23",
+          "ma_nganh": "7520216",
+          "ten_nganh": "Kỹ thuật điều khiển và tự động hóa",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điều khiển và tự động hoá (Chuyên ngành: Tự động hoá, Kỹ thuật điều khiển và tự động hoá giao thông)",
+          "chi_tieu_du_kien": 130,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA23 TM",
+          "ma_nganh": "7520216",
+          "ten_nganh": "Kỹ thuật điều khiển và tự động hóa",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điều khiển và tự động hoá (C huyên ngành Hệ thống giao thông thông minh )",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA24",
+          "ma_nganh": "7520107",
+          "ten_nganh": "Kỹ thuật robot",
+          "ten_chuong_trinh_nganh": "Kỹ thuật robot (Chuyên ngành Kỹ thuật robot và trí tuệ nhân tạo)",
+          "chi_tieu_du_kien": 65,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA25",
+          "ma_nganh": "7520320",
+          "ten_nganh": "Kỹ thuật môi trường",
+          "ten_chuong_trinh_nganh": "Kỹ thuật môi trường",
+          "chi_tieu_du_kien": 55,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "B00",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: Tổ hợp D01 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA26",
+          "ma_nganh": "7580215",
+          "ten_nganh": "Kỹ thuật an toàn giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật an toàn giao thông",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA27",
+          "ma_nganh": "7580101",
+          "ten_nganh": "Kiến trúc",
+          "ten_chuong_trinh_nganh": "Kiến trúc",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "V00",
+            "V01"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA28",
+          "ma_nganh": "7580201",
+          "ten_nganh": "Kỹ thuật xây dựng",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng (Chuyên ngành: Xây dựng dân dụng và công nghiệp, Kết cấu xây dựng, Vật liệu và công nghệ xây dựng)",
+          "chi_tieu_du_kien": 170,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "D07"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: Tổ hợp D01 và D07 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA29",
+          "ma_nganh": "7580210",
+          "ten_nganh": "Kỹ thuật cơ sở hạ tầng",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ sở hạ tầng (Chuyên ngành Cơ sở hạ tầng kỹ thuật đô thị)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "D07"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA30",
+          "ma_nganh": "7580106",
+          "ten_nganh": "Quản lý đô thị và công trình",
+          "ten_chuong_trinh_nganh": "Quản lý đô thị và công trình",
+          "chi_tieu_du_kien": 55,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: Tổ hợp D01 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA31",
+          "ma_nganh": "7580202",
+          "ten_nganh": "Kỹ thuật xây dựng công trình thủy",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình thủy",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA32",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (Chuyên ngành: Cầu đường bộ, Đường bộ và kỹ thuật giao thông, Cầu và kết cấu, Đường sắt và đường sắt đô thị, Xây dựng sân bay cảng hàng không, Công trình giao thông đô thị)",
+          "chi_tieu_du_kien": 550,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: I. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GHA33",
+          "ma_nganh": "7480106",
+          "ten_nganh": "Kỹ thuật máy tính",
+          "ten_chuong_trinh_nganh": "Kỹ thuật máy tính ( theo hướng chuyên sâu vi mạch - bán dẫn, bao gồm lớp kỹ sư tài năng)",
+          "chi_tieu_du_kien": 120,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 2. Các chương trình đào tạo chuẩn thuộc lĩnh vực vi mạch - bán dẫn. Điều kiện bổ sung: - PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên; - Đáp ứng yêu cầu về chuẩn CTĐT theo quy định của Bộ GD&ĐT."
+        },
+        {
+          "ma_xet_tuyen": "GHA22BD",
+          "ma_nganh": "7520207",
+          "ten_nganh": "Kỹ thuật điện tử - viễn thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện tử - viễn thông (Chuyên ngành Kỹ thuật điện tử và tin học công nghiệp)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 2. Các chương trình đào tạo chuẩn thuộc lĩnh vực vi mạch - bán dẫn."
+        },
+        {
+          "ma_xet_tuyen": "GHA08 DS",
+          "ma_nganh": "7840101",
+          "ten_nganh": "Khai thác vận tải",
+          "ten_chuong_trinh_nganh": "Khai thác vận tải (Chuyên ngành: Khai thác và quản lý đường sắt tốc độ cao, Khai thác và quản lý đường sắt đô thị)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: 3. Các chương trình đào tạo chuẩn thuộc lĩnh vực đường sắt tốc độ cao, đường sắt đô thị, đường sắt hiện đại. Điều kiện bổ sung: Đáp ứng yêu cầu chuẩn CTĐT về đường sắt theo quy định của Bộ GD&ĐT"
+        },
+        {
+          "ma_xet_tuyen": "GHA19 DS",
+          "ma_nganh": "7520116",
+          "ten_nganh": "Kỹ thuật cơ khí động lực",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ khí động lực (C huyên ngành Kỹ thuật phương tiện đường sắt tốc độ cao)",
+          "chi_tieu_du_kien": 75,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 3. Các chương trình đào tạo chuẩn thuộc lĩnh vực đường sắt tốc độ cao, đường sắt đô thị, đường sắt hiện đại. Điều kiện bổ sung: -PT3 và tổ hợp D01 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên; -Đáp ứng yêu cầu chuẩn CTĐT về đường sắt theo quy định của Bộ GD&ĐT"
+        },
+        {
+          "ma_xet_tuyen": "GHA32 DS",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (C huyên ngành Đường sắt tốc độ cao)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 3. Các chương trình đào tạo chuẩn thuộc lĩnh vực đường sắt tốc độ cao, đường sắt đô thị, đường sắt hiện đại."
+        },
+        {
+          "ma_xet_tuyen": "GHA21 DS",
+          "ma_nganh": "7520201",
+          "ten_nganh": "Kỹ thuật điện",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện (Chuyên ngành Hệ thống điện đường sắt tốc độ cao, đường sắt đô thị)",
+          "chi_tieu_du_kien": 65,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 3. Các chương trình đào tạo chuẩn thuộc lĩnh vực đường sắt tốc độ cao, đường sắt đô thị, đường sắt hiện đại. Điều kiện bổ sung: -PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên; - Đáp ứng yêu cầu chuẩn CTĐT về đường sắt theo quy định của Bộ GD&ĐT"
+        },
+        {
+          "ma_xet_tuyen": "GHA23 DS",
+          "ma_nganh": "7520216",
+          "ten_nganh": "Kỹ thuật điều khiển và tự động hóa",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điều khiển và tự động hoá (Chuyên ngành Điều khiển và thông tin tín hiệu đường sắt hiện đại)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 3. Các chương trình đào tạo chuẩn thuộc lĩnh vực đường sắt tốc độ cao, đường sắt đô thị, đường sắt hiện đại."
+        },
+        {
+          "ma_xet_tuyen": "GHA28 QT1",
+          "ma_nganh": "7580201",
+          "ten_nganh": "Kỹ thuật xây dựng",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng (Chương trình tiên tiến Kỹ thuật xây dựng công trình giao thông)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "D07"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC). Điều kiện bổ sung: PT3 và tổ hợp D01, D07 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA28 QT2",
+          "ma_nganh": "7580201",
+          "ten_nganh": "Kỹ thuật xây dựng",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng (Chương trình CLC Xây dựng dân dụng và công nghiệp)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "D07"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA32 QT1",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (Chương trình CLC Cầu - Đường bộ Việt - Pháp)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D03",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC). Điều kiện bổ sung: PT3 và tổ hợp D03 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA32 QT2",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (Chương trình CLC Cầu- Đường bộ Việt - Anh)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC). Điều kiện bổ sung: PT3 và tổ hợp D01 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA32 QT3",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (Chương trình CLC Công trình giao thông đô thị) (Mã tuyển sinh các năm trước: Chương trình CLC Công trình giao thông đô thị Việt-Nhật )",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA14 QT",
+          "ma_nganh": "7480201",
+          "ten_nganh": "Công nghệ thông tin",
+          "ten_chuong_trinh_nganh": "Công nghệ thông tin (Chương trình CLC Công nghệ thông tin Việt - Anh)",
+          "chi_tieu_du_kien": 90,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC). Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA16 QT",
+          "ma_nganh": "7520103",
+          "ten_nganh": "Kỹ thuật cơ khí",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ khí (Chương trình CLC Tự động hóa thiết kế cơ khí)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D07",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC). Điều kiện bổ sung: PT3 và tổ hợp D07 (PT1, PT2), thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA20 QT",
+          "ma_nganh": "7520130",
+          "ten_nganh": "Kỹ thuật ô tô",
+          "ten_chuong_trinh_nganh": "Kỹ thuật ô tô (Chương trình CLC Kỹ thuật ô tô)",
+          "chi_tieu_du_kien": 90,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D07",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA11 QT",
+          "ma_nganh": "7580301",
+          "ten_nganh": "Kinh tế xây dựng",
+          "ten_chuong_trinh_nganh": "Kinh tế xây dựng (Chương trình CLC Kinh tế xây dựng công trình giao thông Việt - Anh)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA12 QT",
+          "ma_nganh": "7580302",
+          "ten_nganh": "Quản lý xây dựng",
+          "ten_chuong_trinh_nganh": "Quản lý xây dựng (Chương trình CLC Quản lý xây dựng Việt - Anh)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA22 QT",
+          "ma_nganh": "7520207",
+          "ten_nganh": "Kỹ thuật điện tử - viễn thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện tử - viễn thông (Chương trình CLC Kỹ thuật viễn thông)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3",
+            "PT4"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC). Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GHA04 QT",
+          "ma_nganh": "7340101",
+          "ten_nganh": "Quản trị kinh doanh",
+          "ten_chuong_trinh_nganh": "Quản trị kinh doanh (Chương trình CLC Quản trị kinh doanh Việt - Anh)",
+          "chi_tieu_du_kien": 90,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA06 QT",
+          "ma_nganh": "7340301",
+          "ten_nganh": "Kế toán",
+          "ten_chuong_trinh_nganh": "Kế toán (Chương trình CLC Kế toán tổng hợp Việt - Anh)",
+          "chi_tieu_du_kien": 90,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA10 QT",
+          "ma_nganh": "7510605",
+          "ten_nganh": "Logistics và Quản lý chuỗi cung ứng",
+          "ten_chuong_trinh_nganh": "Logistics và quản lý chuỗi cung ứng (Chương trình CLC Logistics và quản lý chuỗi cung ứng Việt - Anh)",
+          "chi_tieu_du_kien": 45,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "D01",
+            "C01"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình tiên tiến và chất lượng cao (CLC)."
+        },
+        {
+          "ma_xet_tuyen": "GHA04 LK",
+          "ma_nganh": "7340101",
+          "ten_nganh": "Quản trị kinh doanh",
+          "ten_chuong_trinh_nganh": "Chương trình LKQT ngành Quản trị kinh doanh (chuyên ngành: Logistics, Quản trị dịch vụ, Kinh doanh số), (ĐH EM Normandie - Cộng hoà Pháp cấp bằng, học bằng tiếng Anh)",
+          "chi_tieu_du_kien": 40,
+          "phuong_thuc_tuyen_sinh": [
+            "Theo thông báo tuyển sinh riêng của Nhà trường"
+          ],
+          "to_hop_mon_pt1_pt2": [],
+          "ghi_chu": "Nhóm: 5. Các chương trình liên kết quốc tế (LKQT). Điều kiện bổ sung: Xét tuyển theo thông báo tuyển sinh riêng của Nhà trường."
+        },
+        {
+          "ma_xet_tuyen": "GHA17 LK",
+          "ma_nganh": "7520114",
+          "ten_nganh": "Kỹ thuật cơ điện tử",
+          "ten_chuong_trinh_nganh": "Chương trình LKQT ngành Công nghệ kỹ thuật (chuyên ngành: Cơ điện tử, Cơ khí và chế tạo), (Học viện Chisholm - Úc cấp bằng, học bằng tiếng Anh)",
+          "chi_tieu_du_kien": 30,
+          "phuong_thuc_tuyen_sinh": [
+            "Theo thông báo tuyển sinh riêng của Nhà trường"
+          ],
+          "to_hop_mon_pt1_pt2": [],
+          "ghi_chu": "Nhóm: 5. Các chương trình liên kết quốc tế (LKQT). Điều kiện bổ sung: Xét tuyển theo thông báo tuyển sinh riêng của Nhà trường."
+        }
+      ]
+    },
+    "GSA": {
+      "programs": [
+        {
+          "ma_xet_tuyen": "GSA01",
+          "ma_nganh": "7220201",
+          "ten_nganh": "Ngôn ngữ Anh",
+          "ten_chuong_trinh_nganh": "Ngôn ngữ Anh",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "D01",
+            "D09",
+            "D10"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA02",
+          "ma_nganh": "7340101",
+          "ten_nganh": "Quản trị kinh doanh",
+          "ten_chuong_trinh_nganh": "Quản trị kinh doanh",
+          "chi_tieu_du_kien": 82,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA03",
+          "ma_nganh": "7340120",
+          "ten_nganh": "Kinh doanh quốc tế",
+          "ten_chuong_trinh_nganh": "Kinh doanh quốc tế",
+          "chi_tieu_du_kien": 55,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA04",
+          "ma_nganh": "7340201",
+          "ten_nganh": "Tài chính - Ngân hàng",
+          "ten_chuong_trinh_nganh": "Tài chính - Ngân hàng",
+          "chi_tieu_du_kien": 55,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA05",
+          "ma_nganh": "7340301",
+          "ten_nganh": "Kế toán",
+          "ten_chuong_trinh_nganh": "Kế toán (Chuyên ngành Kế toán tổng hợp)",
+          "chi_tieu_du_kien": 75,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA07",
+          "ma_nganh": "7480201",
+          "ten_nganh": "Công nghệ thông tin",
+          "ten_chuong_trinh_nganh": "Công nghệ thông tin",
+          "chi_tieu_du_kien": 100,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GSA08",
+          "ma_nganh": "7510605",
+          "ten_nganh": "Logistics và Quản lý chuỗi cung ứng",
+          "ten_chuong_trinh_nganh": "Logistics và Quản lý chuỗi cung ứng",
+          "chi_tieu_du_kien": 58,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA09",
+          "ma_nganh": "7520114",
+          "ten_nganh": "Kỹ thuật cơ điện tử",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ điện tử",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GSA10",
+          "ma_nganh": "7520116",
+          "ten_nganh": "Kỹ thuật cơ khí động lực",
+          "ten_chuong_trinh_nganh": "Kỹ thuật cơ khí động lực (C huyên ngành: Máy xây dựng, Kỹ thuật máy động lực )",
+          "chi_tieu_du_kien": 70,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA11",
+          "ma_nganh": "7520130",
+          "ten_nganh": "Kỹ thuật ô tô",
+          "ten_chuong_trinh_nganh": "Kỹ thuật ô tô",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA12",
+          "ma_nganh": "7520201",
+          "ten_nganh": "Kỹ thuật điện",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện (Chuyên ngành Trang bị điện trong công nghiệp và GTVT)",
+          "chi_tieu_du_kien": 70,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA13",
+          "ma_nganh": "7520207",
+          "ten_nganh": "Kỹ thuật điện tử - viễn thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện tử - viễn thông (Chuyên ngành Kỹ thuật viễn thông)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA14",
+          "ma_nganh": "7520216",
+          "ten_nganh": "Kỹ thuật điều khiển và tự động hóa",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điều khiển và tự động hoá (Chuyên ngành Tự động hoá)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA15",
+          "ma_nganh": "7580101",
+          "ten_nganh": "Kiến trúc",
+          "ten_chuong_trinh_nganh": "Kiến trúc",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "V00",
+            "V01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA16",
+          "ma_nganh": "7580106",
+          "ten_nganh": "Quản lý đô thị và công trình",
+          "ten_chuong_trinh_nganh": "Quản lý đô thị và công trình",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn. Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GSA17",
+          "ma_nganh": "7580201",
+          "ten_nganh": "Kỹ thuật xây dựng",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng (Chuyên ngành Xây dựng dân dụng và công nghiệp)",
+          "chi_tieu_du_kien": 170,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA18",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (Chuyên ngành: Cầu đường bộ, Đường bộ và kỹ thuật giao thông)",
+          "chi_tieu_du_kien": 180,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA19",
+          "ma_nganh": "7580301",
+          "ten_nganh": "Kinh tế xây dựng",
+          "ten_chuong_trinh_nganh": "Kinh tế xây dựng (Chuyên ngành: Kinh tế và quản lý đầu tư xây dựng, Kinh tế và quản lý cơ sở hạ tầng)",
+          "chi_tieu_du_kien": 100,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA20",
+          "ma_nganh": "7580302",
+          "ten_nganh": "Quản lý xây dựng",
+          "ten_chuong_trinh_nganh": "Quản lý xây dựng (Chuyên ngành Quản lý dự án)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA21",
+          "ma_nganh": "7810103",
+          "ten_nganh": "Quản trị dịch vụ du lịch và lữ hành",
+          "ten_chuong_trinh_nganh": "Quản trị dịch vụ du lịch và lữ hành",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA22",
+          "ma_nganh": "7840101",
+          "ten_nganh": "Khai thác vận tải",
+          "ten_chuong_trinh_nganh": "Khai thác vận tải (Chuyên ngành: Vận tải - Thương mại quốc tế, Quy hoạch và quản lý GTVT đô thị)",
+          "chi_tieu_du_kien": 80,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA23",
+          "ma_nganh": "7840104",
+          "ten_nganh": "Kinh tế vận tải",
+          "ten_chuong_trinh_nganh": "Kinh tế vận tải (Chuyên ngành Kinh tế vận tải thuỷ bộ)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 1. Các chương trình đào tạo chuẩn."
+        },
+        {
+          "ma_xet_tuyen": "GSA06",
+          "ma_nganh": "7480106",
+          "ten_nganh": "Kỹ thuật máy tính",
+          "ten_chuong_trinh_nganh": "Kỹ thuật máy tính ( theo hướng chuyên sâu vi mạch bán dẫn)",
+          "chi_tieu_du_kien": 55,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 2. Các chương trình đào tạo chuẩn thuộc lĩnh vực vi mạch - bán dẫn. Điều kiện bổ sung: - PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên. - Đáp ứng yêu cầu về chuẩn CTĐT theo quy định của Bộ GD&ĐT"
+        },
+        {
+          "ma_xet_tuyen": "GSA13BD",
+          "ma_nganh": "7520207",
+          "ten_nganh": "Kỹ thuật điện tử - viễn thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điện tử - viễn thông (Chuyên ngành Kỹ thuật Điện tử và tin học công nghiệp)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 2. Các chương trình đào tạo chuẩn thuộc lĩnh vực vi mạch - bán dẫn."
+        },
+        {
+          "ma_xet_tuyen": "GSA18DS",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (Chuyên ngành Đường sắt tốc độ cao)",
+          "chi_tieu_du_kien": 60,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 3. Các chương trình đào tạo chuẩn thuộc lĩnh vực đường sắt tốc độ cao và đường sắt hiện đại. Điều kiện bổ sung: -PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên; - Đáp ứng yêu cầu chuẩn CTĐT về đường sắt theo quy định của Bộ GD&ĐT"
+        },
+        {
+          "ma_xet_tuyen": "GSA14DS",
+          "ma_nganh": "7520216",
+          "ten_nganh": "Kỹ thuật điều khiển và tự động hóa",
+          "ten_chuong_trinh_nganh": "Kỹ thuật điều khiển và tự động hoá (Chuyên ngành Điều khiển và thông tin tín hiệu đường sắt hiện đại)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 3. Các chương trình đào tạo chuẩn thuộc lĩnh vực đường sắt tốc độ cao và đường sắt hiện đại."
+        },
+        {
+          "ma_xet_tuyen": "GSA08QT",
+          "ma_nganh": "7510605",
+          "ten_nganh": "Logistics và Quản lý chuỗi cung ứng",
+          "ten_chuong_trinh_nganh": "Logistics và Quản lý chuỗi cung ứng (Chương trình CLC Logistics và Quản lý chuỗi cung ứng Việt - Anh)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "D01"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình đào tạo chất lượng cao."
+        },
+        {
+          "ma_xet_tuyen": "GSA18QT",
+          "ma_nganh": "7580205",
+          "ten_nganh": "Kỹ thuật xây dựng công trình giao thông",
+          "ten_chuong_trinh_nganh": "Kỹ thuật xây dựng công trình giao thông (Chương trình CLC Cầu - Đường bộ Việt - Anh)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình đào tạo chất lượng cao. Điều kiện bổ sung: PT3, thí sinh có học môn Vật lý với điểm trung bình 3 năm THPT từ 5.5 trở lên."
+        },
+        {
+          "ma_xet_tuyen": "GSA11QT",
+          "ma_nganh": "7520130",
+          "ten_nganh": "Kỹ thuật ô tô",
+          "ten_chuong_trinh_nganh": "Kỹ thuật ô tô (Chương trình CLC kỹ thuật ô tô)",
+          "chi_tieu_du_kien": 50,
+          "phuong_thuc_tuyen_sinh": [
+            "PT1",
+            "PT2",
+            "PT3"
+          ],
+          "to_hop_mon_pt1_pt2": [
+            "A00",
+            "A01",
+            "C01",
+            "X06"
+          ],
+          "ghi_chu": "Nhóm: 4. Các chương trình đào tạo chất lượng cao."
+        }
+      ]
+    }
+  }
+}

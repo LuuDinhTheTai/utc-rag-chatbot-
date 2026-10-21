@@ -5,10 +5,14 @@ from fastapi.testclient import TestClient
 from app import main, rag
 
 @pytest.fixture
-def client():
-    main.rates.clear()
-    yield TestClient(main.app)
+def client(tmp_path, monkeypatch):
+    from app.config import settings
+    monkeypatch.setenv('DATA_DIR', str(tmp_path))
+    settings.cache_clear()
+    with TestClient(main.app) as test_client:
+        yield test_client
     main.app.dependency_overrides.clear()
+    settings.cache_clear()
 
 def test_health(client):
     assert client.get('/health').status_code == 200
@@ -143,6 +147,7 @@ def test_gemini_error_is_handled_with_cors(client, monkeypatch, code, status):
 ])
 def test_document_validation_identifies_field(client, monkeypatch, field, value):
     main.app.dependency_overrides[main.admin] = lambda: 'admin'
+    main.app.dependency_overrides[main.can_edit] = lambda: 'admin'
     fake = MagicMock()
     monkeypatch.setattr(main, 'db', lambda: fake)
     body = dict(title='Valid title', source_url='https://tuyensinh.utc.edu.vn/',
@@ -157,6 +162,7 @@ def test_document_validation_identifies_field(client, monkeypatch, field, value)
 
 def test_document_url_rejection_is_explained(client, monkeypatch):
     main.app.dependency_overrides[main.admin] = lambda: 'admin'
+    main.app.dependency_overrides[main.can_edit] = lambda: 'admin'
     fake = MagicMock()
     monkeypatch.setattr(main, 'db', lambda: fake)
     response = client.post('/admin/documents', json=dict(
@@ -195,6 +201,7 @@ def test_storage_requires_admin(client):
 
 def test_upload_preserves_original(client, monkeypatch):
     main.app.dependency_overrides[main.admin] = lambda:'admin'
+    main.app.dependency_overrides[main.can_edit] = lambda:'admin'
     fake = MagicMock()
     fake.table.return_value.select.return_value.eq.return_value.execute.return_value.data = []
     fake.table.return_value.insert.return_value.execute.return_value.data = [{'id':'doc','status':'processing'}]

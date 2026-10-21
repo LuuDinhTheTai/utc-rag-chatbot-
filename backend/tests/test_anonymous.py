@@ -12,7 +12,6 @@ from app.localdb import connect
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv('DATA_DIR', str(tmp_path))
     settings.cache_clear()
-    main.rates.clear()
     with TestClient(main.app) as test_client:
         yield test_client
     settings.cache_clear()
@@ -21,8 +20,9 @@ def client(tmp_path, monkeypatch):
 
 def test_chat_sessions_do_not_require_login(client):
     assert client.get('/admin/documents').status_code == 401
-    assert client.post('/auth/register', json={}).status_code == 404
-    assert client.post('/auth/login', json={}).status_code == 404
+    assert client.get('/auth/me').json()['role'] == 'guest'
+    assert client.post('/auth/register', json={}).status_code == 422
+    assert client.post('/auth/login', json={}).status_code == 422
 
     response = client.post('/sessions')
     assert response.status_code == 200

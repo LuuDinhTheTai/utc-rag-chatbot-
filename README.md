@@ -21,9 +21,16 @@ Tài liệu phân tích từng module, luồng xử lý và cấu trúc lưu tr�
 
 ## Chức năng
 
+- **Ngành học & điểm chuẩn:** trang `/majors` gộp danh mục, so sánh ngành và điểm chuẩn các năm. Bấm **Xem điểm chuẩn** tại một chương trình để lọc chính xác theo mã xét tuyển và cơ sở; có thể trở lại danh mục mà vẫn giữ bộ lọc và lựa chọn so sánh. `/cutoffs` chuyển tới `/majors?view=cutoffs`.
+
+- **Chat theo ngữ cảnh:** câu hỏi tiếp nối được diễn giải thành câu hỏi độc lập từ tối đa 8 tin nhắn gần nhất của cùng phiên trước khi tìm nguồn. Khi chưa rõ đối tượng, chatbot hỏi lại. Lịch sử không được dùng làm bằng chứng cho câu trả lời.
+- **Phạm vi hội thoại:** năm/cơ sở được nêu trong câu hỏi ưu tiên hơn bộ lọc; giao diện cập nhật bộ lọc sau mỗi câu trả lời và khôi phục khi tải lại trang. Thay bộ lọc để đổi phạm vi cho câu tiếp theo. Nút **Cuộc trò chuyện mới** đặt lại phiên, nội dung nhập và bộ lọc; lịch sử cũ không được đưa vào phiên mới.
+
+Khi có lịch sử, mỗi câu hỏi có thêm một lượt gọi Gemini để diễn giải ngữ cảnh. Dữ liệu gửi ở bước này gồm tối đa 8 tin nhắn gần nhất (nội dung mỗi tin giới hạn 2.000 ký tự), câu hỏi đã diễn giải và năm/cơ sở. SQLite tự bổ sung các cột ngữ cảnh khi mở cơ sở dữ liệu cũ.
+
 - **Hỏi đáp tuyển sinh:** lọc theo năm và cơ sở Hà Nội/TP. Hồ Chí Minh; hiển thị trích dẫn, liên kết nguồn, lịch sử hội thoại và đánh giá câu trả lời.
 - **Kho tài liệu:** quản trị viên xem trước nội dung từ URL hoặc tệp, xác nhận lập chỉ mục, tải lại tệp gốc, tạm ẩn, thử lại khi lập chỉ mục lỗi và xóa tài liệu.
-- **Danh mục ngành học:** xem, tìm kiếm, lọc, phân trang; quản trị viên có thể thêm, sửa, ẩn/hiện, xóa hoặc nhập từ JSON.
+- **Danh mục ngành học:** xem, tìm kiếm, lọc, phân trang; chọn 2–3 chương trình (kể cả ở các trang hoặc bộ lọc khác nhau) để so sánh mã xét tuyển, mã ngành, năm, cơ sở, tổ hợp, phương thức và chỉ tiêu trên cùng một bảng; quản trị viên có thể thêm, sửa, ẩn/hiện, xóa hoặc nhập từ JSON.
 - **Hướng dẫn tân sinh viên:** xem hướng dẫn theo khóa, mở PDF gốc; quản trị viên quản lý PDF và từng mục hồ sơ/minh chứng ưu tiên.
 
 Các trang chính: `/` (chat), `/majors` (ngành học), `/freshmen` (tân sinh viên), `/admin` (quản trị). Tài liệu API tự sinh ở `/docs` trên backend.
@@ -64,6 +71,10 @@ Tạo `backend/.env` từ `backend/.env.example`. Nếu đã có file `.env`, c�
 | `EMBEDDING_MODEL` | Model tạo embedding | `gemini-embedding-001` |
 | `FRONTEND_ORIGIN` | Origin được phép gọi API qua CORS | `http://localhost:3000` |
 | `SIMILARITY_THRESHOLD` | Ngưỡng tương đồng tối thiểu khi tìm đoạn nguồn | `0.65` |
+| `RATE_LIMIT_GLOBAL` | Tổng yêu cầu API mỗi phút theo IP | `120` |
+| `RATE_LIMIT_CHAT` | Yêu cầu `POST /chat` mỗi phút theo IP | `20` |
+| `RATE_LIMIT_LOGIN` | Lần thử `POST /admin/login` mỗi phút theo IP | `5` |
+| `RATE_LIMIT_ADMIN_WRITE` | Thao tác ghi `/admin/*` mỗi phút theo IP | `30` |
 
 Tài khoản quản trị được tạo vào **lần đăng nhập đầu tiên**. Mật khẩu được lưu trong SQLite dưới dạng hash scrypt có salt; token đăng nhập hết hạn sau 12 giờ. Sau khi tạo tài khoản, có thể bỏ `ADMIN_PASSWORD` khỏi môi trường. Chỉ sửa biến này trong `.env` **không đổi** mật khẩu của tài khoản đã có; xem mục [Đổi mật khẩu quản trị](#đổi-mật-khẩu-quản-trị).
 
@@ -161,6 +172,15 @@ Trên Linux/macOS, thay bằng `.venv/bin/python scripts/set_admin_password.py`.
 
 Các script sau có chế độ kiểm tra trước; thêm `--apply` mới ghi vào SQLite. Chạy từ `backend` để dùng đúng `DATA_DIR`.
 
+**Dữ liệu tuyển sinh chính quy 2026:** [`backend/data/majors_2026.json`](backend/data/majors_2026.json) gồm 56 mã xét tuyển GHA (Hà Nội) và 29 mã GSA (TP.HCM), trích từ [thông tin tuyển sinh 2026 của trường](https://tuyensinh.utc.edu.vn/?q=tin-tuyen-sinh/th%C3%B4ng-tin-tuy%E1%BB%83n-sinh-%C4%91%E1%BA%A1i-h%E1%BB%8Dc-h%E1%BB%87-ch%C3%ADnh-quy-2026). Tệp lưu mã xét tuyển, mã ngành, tên chương trình/ngành, chỉ tiêu dự kiến, phương thức, tổ hợp và điều kiện bổ sung. Riêng hai chương trình liên kết quốc tế dùng thông báo tuyển sinh riêng nên không có tổ hợp trong bảng chính. Để nạp dữ liệu trên máy mới, từ thư mục `backend` chạy:
+
+```powershell
+.venv\Scripts\python scripts/import_majors.py data/majors_2026.json
+.venv\Scripts\python scripts/import_majors.py data/majors_2026.json --apply
+```
+
+Lệnh đầu chỉ kiểm tra; `--apply` mới ghi SQLite. Tệp là dữ liệu năm 2026, không đại diện cho các năm hoặc hệ đào tạo khác.
+
 **Danh mục ngành từ JSON** (định dạng có `metadata.source_url` và mục `chi_tieu_YYYY`):
 
 ```powershell
@@ -232,6 +252,52 @@ Mỗi lần chạy tạo báo cáo JSON có dấu thời gian tại `DATA_DIR/ev
 Nếu `retrieval_hit_at_6` thấp, kiểm tra tài liệu, bộ lọc, embedding và ngưỡng. Nếu truy xuất đúng nhưng `citation_hit_rate` hoặc `phrase_pass_rate` thấp, kiểm tra cách tạo câu trả lời và nội dung nguồn. Luôn đọc các câu bị đánh dấu `FAIL` trong báo cáo trước khi sửa hệ thống.
 
 
+## Phân quyền quản trị và giới hạn API
+
+Website có bốn vai trò. Đăng nhập/đăng ký/đổi mật khẩu tại `/account`; quyền luôn được backend kiểm tra lại ở mỗi request. Khách không cần tài khoản; đăng ký công khai chỉ tạo sinh viên, giảng viên do admin cấp.
+
+| Vai trò | Xem dữ liệu và phản hồi quản trị | Thêm/sửa/xóa tài liệu, ngành, hướng dẫn | Quản lý tài khoản |
+| --- | --- | --- | --- |
+| `guest` (khách) | Không | Không | Không |
+| `student` (sinh viên) | Không | Không | Không |
+| `lecturer` (giảng viên) | Có | Có | Không |
+| `admin` | Có | Có | Có |
+
+Tất cả vai trò đều có thể tra cứu ngành/điểm chuẩn, hướng dẫn và chat. Tài khoản từ `ADMIN_EMAIL`/`ADMIN_PASSWORD` có vai trò `admin`. Admin thêm tài khoản trong tab **Tài khoản** hoặc qua `POST /admin/accounts` (email, mật khẩu tối thiểu 16 ký tự, role), xem danh sách với `GET /admin/accounts`, đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu qua `PATCH /admin/accounts/{id}`. Đổi quyền, khóa tài khoản hoặc đổi mật khẩu thu hồi toàn bộ phiên của tài khoản đó. Hệ thống không cho tự hạ quyền/khóa admin đang đăng nhập hoặc xóa quyền admin hoạt động cuối cùng.
+
+Auth dùng `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /auth/register` và `POST /auth/password`. Các endpoint `/admin/login` và `/admin/logout` cũ vẫn là alias tương thích. Database dùng `accounts`, `auth_sessions`, `schema_migrations`; bảng cũ được giữ lại nhưng không dùng để xác thực. Migration một lần giữ ID, email, mật khẩu hash và trạng thái; ánh xạ `editor → lecturer`, `viewer → student`, `admin → admin`. Phiên cũ yêu cầu đăng nhập lại. Chat tạo khi đăng nhập gắn `account_id` và chỉ chủ tài khoản mới truy cập được bằng cả Bearer token và X-Session-Token.
+
+Tạo 3 dòng dữ liệu tài khoản mẫu bằng lệnh dưới đây trong thư mục `backend`:
+
+```powershell
+.venv/Scripts/python.exe scripts/seed_auth.py
+```
+
+Script tạo `student.demo@utc.local`, `lecturer.demo@utc.local`, `admin.demo@utc.local` với mật khẩu ngẫu nhiên riêng. Mật khẩu được lưu trong `DATA_DIR/auth-demo-credentials.local.json` (đã được gitignore), không in ra log. Chạy lại không thay tài khoản hay mật khẩu. Nếu database đã tồn tại, script lưu backup `utc.before-auth-v1.sqlite3.bak` trước khi mở migration. Tài liệu chi tiết: [Auth & RBAC](docs/AUTH.md).
+
+Middleware dùng SQLite để đếm yêu cầu theo IP trong cửa sổ 60 giây, dùng chung giữa các tiến trình trỏ tới cùng `DATA_DIR`. Mọi API chịu ngưỡng tổng; `/chat`, `/admin/login` và các thao tác ghi `/admin/*` chịu thêm ngưỡng riêng. Đặt ngưỡng bằng các biến `RATE_LIMIT_*` ở trên; giá trị `0` tắt riêng ngưỡng đó. Vượt ngưỡng nhận HTTP `429` với `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`. CORS preflight và tài liệu OpenAPI không bị tính. Backend dùng IP do ASGI server cung cấp, không tự tin header `X-Forwarded-For`; khi chạy sau reverse proxy, cấu hình proxy tin cậy trên Uvicorn và giới hạn truy cập trực tiếp vào backend.
+
+## Tra cứu điểm chuẩn các năm
+
+Mở `/cutoffs` từ thanh điều hướng bên trái để chọn ngành/chương trình, năm, cơ sở và phương thức bằng bốn dropdown. Bảng hiển thị điểm, **thang điểm**, tiêu chí phụ và liên kết đến thông báo chính thức của trường. Chức năng công khai, không cần đăng nhập. Dữ liệu gồm 558 mức điểm từ các thông báo tuyển sinh chính quy **2024, 2025 và 2026** cho Hà Nội và phân hiệu TP. Hồ Chí Minh. Những ô trường không công bố điểm không được tạo thành bản ghi.
+
+| Năm | Số mức điểm | Nguồn chính thức |
+| --- | ---: | --- |
+| 2024 | 92 | [Thông báo 659 của UTC](https://www.utc.edu.vn/Upload/FilePost/2024/08/17/659-thong-bao-chinh-quy-2024.pdf) |
+| 2025 | 211 | [Thông báo 653 của UTC](https://utc.edu.vn/Upload/FilePost/2025/08/23/653-diem-trung-tuyen-he-dai-hoc-chinh-quy.pdf) |
+| 2026 | 255 | [Thông báo GHA của UTC](https://tuyensinh.utc.edu.vn/?q=node/33061), [thông báo GSA của UTC2](https://tuyensinh.utc2.edu.vn/vi/thong-bao-ve-viec-cong-bo-diem-chuan-dai-hoc-chinh-quy-nam-2026-2460) |
+
+Dữ liệu nguồn nằm trong `backend/data/cutoffs_2024_2026.json`. Các bảng đăng trên thông báo chính thức được đối chiếu với bản chép dạng HTML để tạo JSON; từng dòng lưu URL thông báo gốc của trường và tiêu chí phụ. Mã phương thức được thống nhất: `PT1` = điểm thi THPT, `PT2` = học bạ, `PT3` = đánh giá năng lực, `PT4` = đánh giá tư duy. **Không so sánh trực tiếp điểm giữa các thang 30, 100, 150 và 1200**, hoặc giữa các năm khi quy chế quy đổi thay đổi.
+
+Sau khi tạo SQLite mới hoặc cập nhật dữ liệu, chạy từ thư mục `backend`:
+
+```powershell
+.venv\Scripts\python scripts/import_cutoffs.py data/cutoffs_2024_2026.json
+.venv\Scripts\python scripts/import_cutoffs.py data/cutoffs_2024_2026.json --apply
+```
+
+Lệnh đầu kiểm tra dữ liệu, lệnh `--apply` thêm bản ghi vào `DATA_DIR/utc.sqlite3`. Nhập lại sẽ bỏ qua khóa trùng `(năm, cơ sở, mã xét tuyển, phương thức)` và giữ dữ liệu đã có. API `GET /cutoffs` hỗ trợ `major` (tên ngành/chương trình chính xác), `q` (tìm từ khóa), `year`, `campus`, `method`, `page`, `page_size`; `GET /cutoffs/options` cung cấp ngành, năm và phương thức có dữ liệu. `q` tìm không phân biệt dấu tiếng Việt. Khi trường công bố thông báo mới hoặc đính chính, cập nhật JSON và kiểm tra lại từng dòng trước khi nhập; bản ghi đã có cần được sửa có chủ đích trong SQLite vì bộ nhập không tự ghi đè.
+
 ## API chính
 
 | Nhóm | Endpoint | Công dụng |
@@ -242,6 +308,7 @@ Nếu `retrieval_hit_at_6` thấp, kiểm tra tài liệu, bộ lọc, embedding
 | Tài liệu | `GET/POST /admin/documents`, `POST /admin/documents/preview`, `POST /admin/documents/upload` | Danh sách, thêm và xem trước |
 | Tài liệu | `GET /admin/documents/{id}/download`, `PATCH/DELETE /admin/documents/{id}`, `POST /admin/documents/{id}/retry` | Tải tệp gốc và quản lý trạng thái |
 | Rà soát | `GET /admin/review` | Phản hồi và câu trả lời thiếu nguồn |
+| Điểm chuẩn | `GET /cutoffs`, `GET /cutoffs/options` | Tra cứu lịch sử điểm trúng tuyển và bộ lọc |
 | Ngành học | `GET /majors`, `GET /majors/{id}`, `/admin/majors/*` | Tra cứu và quản trị |
 | Tân sinh viên | `GET /freshmen`, `GET /freshmen/{cohort}`, `GET /freshmen/{cohort}/pdf`, `/admin/freshmen/*` | Hướng dẫn và quản trị |
 

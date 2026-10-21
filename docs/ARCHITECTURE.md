@@ -70,13 +70,17 @@ DEFAULT_YEAR cũng được khai báo trong cấu hình; giao diện chat hiện
 
 ### 3.2. Bảo vệ mật khẩu quản trị: app/security.py
 
-security.py dùng scrypt với salt ngẫu nhiên để lưu mật khẩu quản trị và so sánh hash bằng phép so sánh có thời gian ổn định. Chỉ các route /admin dùng tài khoản và token quản trị; khách truy cập các trang công khai không cần đăng nhập.
+security.py dùng scrypt với salt ngẫu nhiên cho mọi tài khoản và so sánh hash bằng phép so sánh có thời gian ổn định. Module `auth.py` cung cấp auth chung và RBAC: khách, sinh viên, giảng viên, admin. Khách truy cập các trang công khai không cần đăng nhập. Chi tiết schema, migration và quyền: [AUTH.md](AUTH.md).
 
 ### 3.3. API và điều phối: app/main.py
 
 main.py khởi tạo FastAPI, CORS, các bộ xử lý lỗi và Database được giữ lại bằng bộ nhớ đệm. Module này giữ lớp điều phối HTTP, còn logic RAG nằm trong rag.py và lưu trữ nằm trong localdb.py.
 
-**Tài khoản quản trị.** POST /admin/login kiểm tra email và mật khẩu. Nếu chưa có admin, đăng nhập đầu tiên sẽ tạo tài khoản từ biến môi trường sau khi kiểm tra mật khẩu khởi tạo dài ít nhất 16 ký tự và đã thay mẫu mặc định. Mật khẩu lưu bằng scrypt với salt. Token ngẫu nhiên trả cho trình duyệt, còn SQLite chỉ giữ SHA-256 của token và thời điểm hết hạn 12 giờ. Các route quản trị đọc Bearer token qua dependency admin(); POST /admin/logout xóa phiên.
+**Auth chung.** `POST /auth/login` kiểm tra email và mật khẩu; `POST /auth/logout` thu hồi phiên; `GET /auth/me` trả vai trò/quyền; đăng ký chỉ cấp vai trò sinh viên. Nếu chưa có admin, đăng nhập bằng email bootstrap tạo tài khoản từ cấu hình sau khi kiểm tra mật khẩu dài ít nhất 16 ký tự và đã thay mẫu mặc định. Mật khẩu lưu bằng scrypt; SQLite chỉ giữ SHA-256 của token và thời điểm hết hạn 12 giờ. Các endpoint login/logout cũ vẫn là alias.
+
+**RBAC.** `accounts` lưu role (`student`, `lecturer`, `admin`) và `is_active`; `guest` đại diện truy cập ẩn danh. `admin()` yêu cầu quyền đọc nội dung quản trị; `can_edit()` yêu cầu quyền ghi nội dung của giảng viên/admin; `owner()` yêu cầu quyền quản lý tài khoản chỉ dành cho admin. Sinh viên không truy cập API quản trị. Mọi thay đổi quyền, mật khẩu hoặc khóa tài khoản xóa phiên trong `auth_sessions`. Transaction `BEGIN IMMEDIATE` bảo vệ cập nhật đồng thời và admin hoạt động cuối cùng. Migration `accounts_v1` giữ ID/password hash của tài khoản cũ, đổi editor thành lecturer và viewer thành student; phiên cũ không còn hiệu lực.
+
+**Rate limit: app/ratelimit.py.** Middleware chạy trước route, dùng IP từ ASGI scope và bốn ngưỡng cấu hình: toàn API, chat, đăng nhập, ghi quản trị. Khóa IP/ngưỡng được hash SHA-256; bộ đếm cửa sổ 60 giây nằm trong bảng `api_rate_limits` của SQLite. `BEGIN IMMEDIATE` giúp nhiều worker không ghi đè lượt đếm của nhau. Quá ngưỡng trả 429 và thời gian chờ; CORS bọc ngoài middleware để 429 vẫn có header CORS. OPTIONS và trang OpenAPI được bỏ qua. Bộ đếm cũ được dọn định kỳ.
 
 **Phiên chat ẩn danh.** POST /sessions tạo token ngẫu nhiên, chỉ lưu SHA-256 của token trong chat_sessions và trả token cho trình duyệt. GET /messages, POST /chat và POST /feedback dùng header X-Session-Token; dependency session() tìm đúng phiên theo hash. Token không cấp quyền quản trị. Phản hồi chỉ cập nhật câu trả lời trong chính phiên đó. Nút tạo hội thoại mới bỏ token cũ ở trình duyệt và lần gửi tiếp theo tạo phiên mới.
 
@@ -115,7 +119,8 @@ connect() mở SQLite tại DATA_DIR/utc.sqlite3, bật foreign key và WAL, r�
 
 | Bảng | Dữ liệu chính và quan hệ |
 | --- | --- |
-| admins, admin_sessions | Tài khoản quản trị và hash token đăng nhập |
+| accounts, auth_sessions | Tài khoản sinh viên/giảng viên/admin và hash token đăng nhập |
+| schema_migrations | Phiên bản migration đã áp dụng; bảng admins/admin_sessions cũ chỉ giữ để tham chiếu |
 | chat_sessions, messages, feedback | Token hash của phiên ẩn danh, lịch sử hai vai trò và đánh giá câu trả lời |
 | documents, document_chunks | Metadata tài liệu và các đoạn văn bản kèm embedding; đoạn thuộc một tài liệu |
 | major_catalogue | Bản ghi ngành theo năm/cơ sở/mã, trường tìm kiếm và các trường JSON |
@@ -133,7 +138,7 @@ StorageBucket ghi tệp dưới DATA_DIR/files, kiểm tra đường dẫn để
 
 ### 3.5. Danh mục ngành: app/majors.py
 
-Module định nghĩa MajorInput và các quy tắc kiểm tra mã, chỉ tiêu, URL nguồn, danh sách phương thức/tổ hợp. GET /majors và GET /majors/{id} chỉ trả ngành đang hoạt động cho người dùng; bộ lọc gồm từ khóa, năm, cơ sở và phân trang. Các route /admin/majors cho phép xem toàn bộ, thêm, sửa, xóa và nhập JSON.
+Module định nghĩa MajorInput và các quy tắc kiểm tra mã, chỉ tiêu, URL nguồn, danh sách phương thức/tổ hợp. Frontend giữ tối đa ba bản ghi đã chọn trong trạng thái của MajorCatalogue, độc lập với phân trang/bộ lọc; bảng so sánh hiển thị trực tiếp từ dữ liệu API, không cần endpoint riêng. GET /majors và GET /majors/{id} chỉ trả ngành đang hoạt động cho người dùng; bộ lọc gồm từ khóa, năm, cơ sở và phân trang. Các route /admin/majors cho phép xem toàn bộ, thêm, sửa, xóa và nhập JSON.
 
 parse_catalogue() đọc cấu trúc JSON theo các phần chỉ tiêu từng năm và cơ sở GHA/GSA, chuẩn hóa thành các bản ghi, phát hiện mã trùng và giới hạn số bản ghi nhập. Dữ liệu được lưu tại major_catalogue; tìm kiếm dùng trường search_text trong SQLite. Đây là danh mục cấu trúc riêng, không đi qua tạo embedding.
 
@@ -198,3 +203,12 @@ requirements.in liệt kê phụ thuộc trực tiếp của backend; requiremen
 - Supabase SQL nằm trong thư mục lịch sử. Kiến trúc chạy hiện tại dùng localdb.py và không yêu cầu Supabase.
 
 Đối với hợp đồng đầu vào/đầu ra chi tiết từng endpoint, mở tài liệu OpenAPI tự sinh tại /docs của backend đang chạy.
+
+## Module tra cứu điểm chuẩn
+
+- `backend/data/cutoffs_2024_2026.json` lưu mỗi ô điểm được công bố thành một bản ghi độc lập, gồm năm, cơ sở, mã xét tuyển, tên chương trình, phương thức, điểm, thang, tiêu chí phụ và URL thông báo UTC. Khóa logic là `(admission_year, campus, admission_code, method)`; điểm vắng mặt trong thông báo không được suy đoán.
+- `backend/scripts/import_cutoffs.py` kiểm tra cấu trúc, giới hạn điểm theo thang, URL chính thức và khóa trùng trước khi nhập. `--apply` dùng một giao dịch SQLite với `INSERT OR IGNORE`, nên có thể chạy lại mà không sửa bản ghi cũ.
+- `backend/app/localdb.py` tạo bảng `cutoff_scores` và chỉ mục cho các trường lọc. `backend/app/cutoffs.py` cung cấp hai endpoint công khai: danh sách phân trang và các lựa chọn bộ lọc (tên chương trình, năm, phương thức). Từ khóa được chuẩn hóa chữ thường, bỏ dấu tiếng Việt và ký tự đặc biệt của SQL `LIKE` được escape.
+- `frontend/components/CutoffLookup.tsx` gọi API khi một trong bốn dropdown thay đổi, hiển thị bảng gồm điểm/thang và liên kết nguồn từng dòng. Trang `/cutoffs` được gắn trong sidebar chung. Bảng cuộn ngang trên màn hình nhỏ; phân trang giữ tối đa 25 bản ghi mỗi lần gọi.
+
+Luồng dữ liệu: thông báo UTC → JSON đã đối chiếu → bộ nhập kiểm tra → SQLite → `GET /cutoffs` → trang tra cứu. Tất cả truy vấn đọc không yêu cầu token; middleware rate limit chung vẫn áp dụng.

@@ -8,8 +8,9 @@ type ItemDraft=Omit<Item,'id'>;
 type Detail={guide:Guide;items:Item[]};
 const empty:ItemDraft={code:'',category:'document',title:'',applies_to:'',evidence:'',source_page:1,sort_order:1,is_active:true};
 
-export default function FreshmanGuide({token}:{token?:string}){
+export default function FreshmanGuide({token,readOnly=false}:{token?:string;readOnly?:boolean}){
   const admin=Boolean(token);
+  const canEdit=admin&&!readOnly;
   const [guides,setGuides]=useState<Guide[]>([]),[cohort,setCohort]=useState('K67'),[detail,setDetail]=useState<Detail|null>(null);
   const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [draft,setDraft]=useState<ItemDraft|null>(null),[editing,setEditing]=useState<string|null>(null);
@@ -110,19 +111,19 @@ export default function FreshmanGuide({token}:{token?:string}){
   const priorities=detail?.items.filter(i=>i.category==='priority')||[];
   return <section className="freshmen-page">
     <div className="major-heading"><div><div className="eyebrow">{admin?'QUẢN TRỊ TÂN SINH VIÊN':'HƯỚNG DẪN NHẬP HỌC'}</div><h1>Hồ sơ tân sinh viên</h1><p className="muted">Chuẩn bị theo khóa, năm tốt nghiệp và đối tượng xét tuyển của bạn.</p></div>
-      {admin&&<button className="primary" onClick={()=>{setShowGuideForm(true);setEditingGuide(false);setGuideFile(undefined);setGuideDraft({cohort:'',title:'',admission_year:2026,is_published:true});}}>＋ Thêm khóa</button>}</div>
+      {canEdit&&<button className="primary" onClick={()=>{setShowGuideForm(true);setEditingGuide(false);setGuideFile(undefined);setGuideDraft({cohort:'',title:'',admission_year:2026,is_published:true});}}>＋ Thêm khóa</button>}</div>
     {error&&<div className="error" role="alert">{error}</div>}{notice&&<div className="notice" role="status">{notice}</div>}
     <div className="freshmen-toolbar"><label>Khóa<select value={cohort} onChange={e=>{setCohort(e.target.value);setDraft(null);setShowGuideForm(false);}}>{guides.map(g=><option key={g.id} value={g.cohort}>{g.cohort} · {g.admission_year}</option>)}</select></label>
       {detail&&<button type="button" className="freshmen-pdf-link" onClick={()=>openPdf()}>Mở PDF gốc ↗</button>}
-      {admin&&detail&&<><button onClick={()=>{setGuideDraft({...detail.guide,is_published:detail.guide.is_published??true});setEditingGuide(true);setShowGuideForm(true);}}>Sửa hướng dẫn</button><button disabled={busy} onClick={deleteGuide}>Xóa khóa</button><button className="primary" onClick={()=>edit()}>＋ Thêm mục</button></>}</div>
-    {admin&&showGuideForm&&<form className="panel" onSubmit={editingGuide?updateGuide:createGuide}><h2>{editingGuide?'Sửa hướng dẫn':'Tạo hướng dẫn mới'}</h2><div className="form-grid">
+      {canEdit&&detail&&<><button onClick={()=>{setGuideDraft({...detail.guide,is_published:detail.guide.is_published??true});setEditingGuide(true);setShowGuideForm(true);}}>Sửa hướng dẫn</button><button disabled={busy} onClick={deleteGuide}>Xóa khóa</button><button className="primary" onClick={()=>edit()}>＋ Thêm mục</button></>}</div>
+    {canEdit&&showGuideForm&&<form className="panel" onSubmit={editingGuide?updateGuide:createGuide}><h2>{editingGuide?'Sửa hướng dẫn':'Tạo hướng dẫn mới'}</h2><div className="form-grid">
       {!editingGuide&&<label>Mã khóa<input required placeholder="K68" pattern="K[0-9]{1,4}" value={guideDraft.cohort} onChange={e=>setGuideDraft(d=>({...d,cohort:e.target.value.toUpperCase()}))}/></label>}
       <label>Tiêu đề<input required minLength={5} maxLength={300} value={guideDraft.title} onChange={e=>setGuideDraft(d=>({...d,title:e.target.value}))}/></label>
       <label>Năm tuyển sinh<input type="number" required min={2000} max={2100} value={guideDraft.admission_year} onChange={e=>setGuideDraft(d=>({...d,admission_year:Number(e.target.value)}))}/></label>
       {!editingGuide&&<label>PDF gốc<input type="file" required accept=".pdf,application/pdf" onChange={e=>setGuideFile(e.target.files?.[0])}/></label>}</div>
       {editingGuide&&<label className="freshmen-check"><input type="checkbox" checked={guideDraft.is_published} onChange={e=>setGuideDraft(d=>({...d,is_published:e.target.checked}))}/> Công bố cho user</label>}
       <div className="row-actions"><button className="primary" disabled={busy}>Lưu hướng dẫn</button><button type="button" onClick={()=>setShowGuideForm(false)}>Hủy</button></div></form>}
-    {admin&&draft&&<form className="panel" onSubmit={save}><h2>{editing?'Sửa mục hướng dẫn':'Thêm mục hướng dẫn'}</h2><div className="form-grid">
+    {canEdit&&draft&&<form className="panel" onSubmit={save}><h2>{editing?'Sửa mục hướng dẫn':'Thêm mục hướng dẫn'}</h2><div className="form-grid">
       <label>Nhóm<select value={draft.category} onChange={e=>setDraft(d=>d?{...d,category:e.target.value as ItemDraft['category']}:d)}><option value="document">Hồ sơ</option><option value="priority">Minh chứng ưu tiên</option></select></label>
       <label>Mã mục<input required maxLength={20} value={draft.code} onChange={e=>setDraft(d=>d?{...d,code:e.target.value}:d)}/></label>
       <label>Tiêu đề<input required minLength={2} maxLength={500} value={draft.title} onChange={e=>setDraft(d=>d?{...d,title:e.target.value}:d)}/></label>
@@ -135,17 +136,17 @@ export default function FreshmanGuide({token}:{token?:string}){
     {loading&&<p className="muted">Đang tải hướng dẫn…</p>}
     {!loading&&!detail&&<div className="panel muted">Chưa có hướng dẫn nào để hiển thị.</div>}
     {detail&&<><div className="freshmen-source"><strong>{detail.guide.title}</strong><span>Khóa {detail.guide.cohort} · năm {detail.guide.admission_year}</span>{admin&&!detail.guide.is_published&&<span className="status">Chưa công bố</span>}</div>
-      <FreshmanSection title="Hồ sơ sinh viên" items={documents} admin={admin} busy={busy} edit={edit} remove={remove} openPdf={openPdf}/>
-      <FreshmanSection title="Minh chứng ưu tiên đối tượng" items={priorities} admin={admin} busy={busy} edit={edit} remove={remove} openPdf={openPdf}/>
+      <FreshmanSection title="Hồ sơ sinh viên" items={documents} admin={canEdit} showHiddenStatus={admin} busy={busy} edit={edit} remove={remove} openPdf={openPdf}/>
+      <FreshmanSection title="Minh chứng ưu tiên đối tượng" items={priorities} admin={canEdit} showHiddenStatus={admin} busy={busy} edit={edit} remove={remove} openPdf={openPdf}/>
       <p className="disclaimer">Chỉ chuẩn bị giấy tờ thuộc trường hợp của bạn. Đối chiếu bản PDF gốc và thông báo mới nhất của trường trước khi nộp hồ sơ.</p></>}
   </section>;
 }
-function FreshmanSection({title,items,admin,busy,edit,remove,openPdf}:{title:string;items:Item[];admin:boolean;busy:boolean;edit:(item:Item)=>void;remove:(item:Item)=>void;openPdf:(page?:number)=>void}){
+function FreshmanSection({title,items,admin,showHiddenStatus,busy,edit,remove,openPdf}:{title:string;items:Item[];admin:boolean;showHiddenStatus:boolean;busy:boolean;edit:(item:Item)=>void;remove:(item:Item)=>void;openPdf:(page?:number)=>void}){
   return <section className="freshmen-section"><h2>{title} <small>{items.length} mục</small></h2>
     <div className="freshmen-table-scroll" role="region" aria-label={title} tabIndex={0}><table className="freshmen-table"><thead><tr>
       <th scope="col">Mục</th><th scope="col">Nội dung</th><th scope="col">Áp dụng cho</th><th scope="col">Giấy tờ / minh chứng</th><th scope="col">Nguồn</th>{admin&&<th scope="col">Thao tác</th>}
     </tr></thead><tbody>{items.map(item=><tr key={item.id}>
-      <td className="freshmen-code">{item.code}</td><td><strong>{item.title}</strong>{admin&&!item.is_active&&<span className="status"> Đã ẩn</span>}</td>
+      <td className="freshmen-code">{item.code}</td><td><strong>{item.title}</strong>{showHiddenStatus&&!item.is_active&&<span className="status"> Đã ẩn</span>}</td>
       <td>{item.applies_to||'Theo nội dung hướng dẫn'}</td><td>{item.evidence||'Xem PDF gốc'}</td>
       <td><button type="button" className="freshmen-page-link" onClick={()=>openPdf(item.source_page)}>Trang {item.source_page} ↗</button></td>
       {admin&&<td className="freshmen-actions"><button disabled={busy} onClick={()=>edit(item)}>Sửa</button><button disabled={busy} onClick={()=>remove(item)}>Xóa</button></td>}

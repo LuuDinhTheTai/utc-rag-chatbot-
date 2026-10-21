@@ -1,9 +1,7 @@
 import hashlib
 import logging
 import secrets
-import threading
 import time
-from collections import defaultdict, deque
 from functools import lru_cache
 from typing import Literal
 from uuid import UUID, uuid4
@@ -16,17 +14,19 @@ from fastapi.exceptions import RequestValidationError
 from google.genai.errors import APIError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .security import check_password, password_hash
+from .auth import router as auth_router, admin, can_edit, owner, optional_account
 from .config import settings
 from .localdb import Database, connect
+from .ratelimit import rate_limit_middleware
 from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, valid_url
+from .rag import resolve_question
 
 logging.basicConfig(level=logging.INFO)
 # Do not log HTTP request URLs or credentials.
 logging.getLogger('httpx').setLevel(logging.WARNING)
 log = logging.getLogger('utc')
 app = FastAPI(title='UTC Admissions RAG', version='1.0.0')
-app.add_middleware(CORSMiddleware, allow_origins=[settings().frontend_origin], allow_methods=['GET', 'POST', 'PATCH', 'DELETE'], allow_headers=['Content-Type', 'Authorization', 'X-Session-Token'])
+app.include_router(auth_router)
 
 
 @lru_cache
@@ -34,85 +34,16 @@ def db():
     return Database()
 
 
-def bootstrap_admin():
-    with connect() as conn:
-        if conn.execute('SELECT id FROM admins LIMIT 1').fetchone():
-            return
-        cfg = settings()
-        if not cfg.admin_email or not cfg.admin_password:
-            raise HTTPException(503, 'Configure ADMIN_EMAIL and ADMIN_PASSWORD on the server.')
-        if len(cfg.admin_password) < 16 or cfg.admin_password.startswith('CHANGE_ME'):
-            raise HTTPException(503, 'Set a unique ADMIN_PASSWORD of at least 16 characters.')
-        conn.execute('INSERT INTO admins(id,email,password_hash) VALUES(?,?,?)',
-                     (str(uuid4()), cfg.admin_email.lower(), password_hash(cfg.admin_password)))
 
-
-
-class LoginInput(BaseModel):
-    email: str
-    password: str
-
-
-@app.post('/admin/login')
-def login(body: LoginInput, request: Request):
-    throttle(request)
-    bootstrap_admin()
-    with connect() as conn:
-        row = conn.execute('SELECT * FROM admins WHERE email=?', (body.email.lower(),)).fetchone()
-        if not row or not check_password(body.password, row['password_hash']):
-            raise HTTPException(401, 'Invalid email or password.')
-        token = secrets.token_urlsafe(32)
-        expiry = (datetime.now(timezone.utc) + timedelta(hours=12)).isoformat()
-        conn.execute('INSERT INTO admin_sessions(token_hash,admin_id,expires_at) VALUES(?,?,?)',
-                     (hashlib.sha256(token.encode()).hexdigest(), row['id'], expiry))
-    return {'token': token}
-
-
-@app.post('/admin/logout')
-def logout(authorization: str = Header(default='')):
-    if authorization.startswith('Bearer '):
-        with connect() as conn:
-            conn.execute('DELETE FROM admin_sessions WHERE token_hash=?',
-                         (hashlib.sha256(authorization[7:].encode()).hexdigest(),))
-    return {'ok': True}
-
-
-def admin(authorization: str = Header(default='')):
-    if not authorization.startswith('Bearer '):
-        raise HTTPException(401, 'Please sign in.')
-    with connect() as conn:
-        row = conn.execute('SELECT admin_id FROM admin_sessions WHERE token_hash=? AND expires_at>?',
-                           (hashlib.sha256(authorization[7:].encode()).hexdigest(), datetime.now(timezone.utc).isoformat())).fetchone()
-    if not row:
-        raise HTTPException(401, 'Invalid or expired admin session.')
-    return row['admin_id']
-
-
-rates = defaultdict(deque)
-rate_lock = threading.Lock()
-
-
-def throttle(request: Request):
-    key = request.client.host if request.client else 'unknown'
-    now = time.monotonic()
-    with rate_lock:
-        for old in list(rates):
-            while rates[old] and now - rates[old][0] > 60:
-                rates[old].popleft()
-            if not rates[old]:
-                del rates[old]
-        if len(rates[key]) >= 20:
-            raise HTTPException(429, 'Bạn gửi quá nhanh. Vui lòng thử lại sau một phút.')
-        rates[key].append(now)
-
-
-def session(x_session_token: str = Header(default='')):
+def session(x_session_token: str = Header(default=''), account=Depends(optional_account)):
     if not 32 <= len(x_session_token) <= 200:
         raise HTTPException(401, 'Phiên trò chuyện không hợp lệ.')
-    rows = db().table('chat_sessions').select('id').eq(
+    rows = db().table('chat_sessions').select('id,account_id').eq(
         'token_hash', hashlib.sha256(x_session_token.encode()).hexdigest()).execute().data
     if not rows:
         raise HTTPException(401, 'Phiên trò chuyện không tồn tại.')
+    if rows[0].get('account_id') and (not account or account['id'] != rows[0]['account_id']):
+        raise HTTPException(403, 'Bạn không có quyền xem cuộc trò chuyện này.')
     return rows[0]['id']
 
 @app.exception_handler(RequestValidationError)
@@ -152,15 +83,16 @@ async def unexpected(request, exc):
 def health():
     cfg = settings()
     with connect() as conn:
-        has_admin = bool(conn.execute('SELECT id FROM admins LIMIT 1').fetchone())
+        has_admin = bool(conn.execute("SELECT id FROM accounts WHERE role='admin' LIMIT 1").fetchone())
     return {'status': 'ok', 'configured': bool(has_admin and cfg.google_api_key)}
 
 
-@app.post('/sessions', dependencies=[Depends(throttle)])
-def new_session():
+@app.post('/sessions')
+def new_session(account=Depends(optional_account)):
     token = secrets.token_urlsafe(32)
     row = db().table('chat_sessions').insert({
-        'token_hash': hashlib.sha256(token.encode()).hexdigest()}).execute().data[0]
+        'token_hash': hashlib.sha256(token.encode()).hexdigest(),
+        'account_id': account['id'] if account else None}).execute().data[0]
     return {'id': row['id'], 'token': token}
 
 @app.get('/messages')
@@ -174,7 +106,7 @@ class ChatInput(BaseModel):
     campus: Literal['hanoi', 'hcm'] = 'hanoi'
 
 
-@app.post('/chat', dependencies=[Depends(throttle)])
+@app.post('/chat')
 def chat(body: ChatInput, sid=Depends(session)):
     question = body.question.strip()
     if len(question) < 2:
@@ -186,13 +118,28 @@ def chat(body: ChatInput, sid=Depends(session)):
         raise HTTPException(422, str(exc))
     if not settings().google_api_key:
         raise HTTPException(503, 'Chưa cấu hình Gemini API trên máy chủ.')
-    matches = match_chunks(question, year, campus, db(), embeddings())
-    answer, sources, supported = generate(question, matches) if matches else (NO_ANSWER, [], False)
+    with connect() as conn:
+        recent = conn.execute(
+            'SELECT role,content,resolved_question,context_year,context_campus FROM messages '
+            'WHERE session_id=? ORDER BY created_at DESC,rowid DESC LIMIT 8', (sid,)
+        ).fetchall()
+    context = [dict(role=row['role'], content=row['content'][:2000],
+                    resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'])
+               for row in reversed(recent)]
+    resolved = resolve_question(question, context, year, campus)
+    if resolved.clarification:
+        answer, sources, supported = resolved.clarification, [], False
+    else:
+        matches = match_chunks(resolved.question, year, campus, db(), embeddings())
+        answer, sources, supported = generate(resolved.question, matches) if matches else (NO_ANSWER, [], False)
     elapsed = round((time.monotonic() - started) * 1000)
-    rows = db().table('messages').insert([
+    records = [
         {'session_id': sid, 'role': 'user', 'content': question, 'sources': [], 'question': None, 'supported': None, 'latency_ms': None},
         {'session_id': sid, 'role': 'assistant', 'question': question, 'content': answer, 'sources': sources, 'supported': supported, 'latency_ms': elapsed}
-    ]).execute().data
+    ]
+    for record in records:
+        record.update(resolved_question=resolved.question, context_year=year, context_campus=campus)
+    rows = db().table('messages').insert(records).execute().data
     log.info('chat_completed latency_ms=%d supported=%s', elapsed, supported)
     return next(row for row in rows if row['role'] == 'assistant')
 
@@ -203,7 +150,7 @@ class FeedbackInput(BaseModel):
     comment: str = Field(default='', max_length=1000)
 
 
-@app.post('/feedback', dependencies=[Depends(throttle)])
+@app.post('/feedback')
 def feedback(body: FeedbackInput, sid=Depends(session)):
     rows = db().table('messages').select('id').eq('id', str(body.message_id)).eq('session_id', sid).eq('role', 'assistant').execute().data
     if not rows:
@@ -229,7 +176,7 @@ def ingest(document_id, text):
 
 
 @app.post('/admin/documents/preview')
-def preview(file: UploadFile | None = File(default=None), url: str = Form(default=''), uid=Depends(admin)):
+def preview(file: UploadFile | None = File(default=None), url: str = Form(default=''), uid=Depends(can_edit)):
     try:
         if file:
             text = extract(file.file.read(MAX_BYTES+1), file.filename or '')
@@ -286,13 +233,13 @@ def persist_document(body, tasks, uid, original=None):
 
 
 @app.post('/admin/documents')
-def create_document(body: DocumentInput, tasks: BackgroundTasks, uid=Depends(admin)):
+def create_document(body: DocumentInput, tasks: BackgroundTasks, uid=Depends(can_edit)):
     return persist_document(body, tasks, uid)
 
 
 @app.post('/admin/documents/upload')
 def upload_document(tasks: BackgroundTasks, metadata: str = Form(...),
-                    file: UploadFile = File(...), uid=Depends(admin)):
+                    file: UploadFile = File(...), uid=Depends(can_edit)):
     try:
         body = DocumentInput.model_validate_json(metadata)
     except ValidationError as exc:
@@ -335,7 +282,7 @@ class DocumentStatus(BaseModel):
 
 
 @app.patch('/admin/documents/{document_id}')
-def toggle(document_id: UUID, body: DocumentStatus, uid=Depends(admin)):
+def toggle(document_id: UUID, body: DocumentStatus, uid=Depends(can_edit)):
     rows = db().table('documents').update({'status': body.status}).eq('id', str(document_id)).in_('status', ['ready', 'inactive']).execute().data
     if not rows:
         raise HTTPException(409, 'Chỉ bật/tắt được tài liệu đã lập chỉ mục.')
@@ -343,7 +290,7 @@ def toggle(document_id: UUID, body: DocumentStatus, uid=Depends(admin)):
 
 
 @app.post('/admin/documents/{document_id}/retry')
-def retry(document_id: UUID, tasks: BackgroundTasks, uid=Depends(admin)):
+def retry(document_id: UUID, tasks: BackgroundTasks, uid=Depends(can_edit)):
     rows = db().table('documents').update({'status': 'processing', 'error': None}).eq('id', str(document_id)).eq('status', 'failed').execute().data
     if not rows:
         raise HTTPException(409, 'Chỉ thử lại tài liệu bị lỗi.')
@@ -353,7 +300,7 @@ def retry(document_id: UUID, tasks: BackgroundTasks, uid=Depends(admin)):
 
 
 @app.delete('/admin/documents/{document_id}')
-def delete_document(document_id: UUID, uid=Depends(admin)):
+def delete_document(document_id: UUID, uid=Depends(can_edit)):
     # Claim the row so retry/toggle cannot start ingestion during removal.
     rows = db().table('documents').update({'status': 'deleting'}).eq('id', str(document_id)).in_('status', ['ready', 'inactive', 'failed', 'deleting']).execute().data
     if not rows:
@@ -377,7 +324,13 @@ def review(uid=Depends(admin)):
 
 
 from .majors import make_router
-app.include_router(make_router(db, admin))
+app.include_router(make_router(db, admin, can_edit))
 
 from .freshmen import make_router as make_freshmen_router
-app.include_router(make_freshmen_router(db, admin))
+app.include_router(make_freshmen_router(db, admin, can_edit))
+
+from .cutoffs import router as cutoff_router
+app.include_router(cutoff_router)
+
+app.middleware('http')(rate_limit_middleware)
+app.add_middleware(CORSMiddleware, allow_origins=[settings().frontend_origin], allow_methods=['GET', 'POST', 'PATCH', 'DELETE'], allow_headers=['Content-Type', 'Authorization', 'X-Session-Token'], expose_headers=['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'])

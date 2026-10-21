@@ -8,3 +8,5 @@ __pycache__/
 *.tsbuildinfo
 
 backend/data/local/
+auth-demo-credentials.local.json
+*.sqlite3.bak

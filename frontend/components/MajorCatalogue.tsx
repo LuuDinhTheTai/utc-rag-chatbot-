@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
 
-type Major = {
+export type Major = {
   id: string; admission_code: string; major_code: string; name: string; program_name: string;
   admission_year: number; campus: 'hanoi' | 'hcm'; quota: number | null;
   methods: string[]; subject_groups: string[]; notes: string; source_url: string; is_active: boolean;
@@ -12,8 +12,9 @@ type Result = {items: Major[]; total: number};
 const blank: Draft = {admission_code:'',major_code:'',name:'',program_name:'',admission_year:2026,campus:'hanoi',quota:null,methods:[],subject_groups:[],notes:'',source_url:'https://tuyensinh.utc.edu.vn/',is_active:true};
 const methodNames: Record<string,string> = {PT1:'Thi tốt nghiệp THPT / giải quốc gia, quốc tế',PT2:'Học bạ kết hợp điều kiện điểm thi',PT3:'Đánh giá năng lực',PT4:'Đánh giá tư duy'};
 
-export default function MajorCatalogue({token}:{token?:string}) {
+export default function MajorCatalogue({token,readOnly=false,onViewCutoffs}:{token?:string;readOnly?:boolean;onViewCutoffs?:(major:Major)=>void}) {
   const isAdmin=Boolean(token);
+  const canEdit=isAdmin&&!readOnly;
   const [result,setResult]=useState<Result>({items:[],total:0});
   const [query,setQuery]=useState(''),[search,setSearch]=useState(''),[year,setYear]=useState('2026'),[campus,setCampus]=useState('');
   const [page,setPage]=useState(1),[revision,setRevision]=useState(0),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false);
@@ -21,6 +22,8 @@ export default function MajorCatalogue({token}:{token?:string}) {
   const [draft,setDraft]=useState<Draft|null>(null),[editing,setEditing]=useState<string|null>(null);
   const [methods,setMethods]=useState(''),[groups,setGroups]=useState('');
   const [jsonFile,setJsonFile]=useState<File>();
+  const [selected,setSelected]=useState<Major[]>([]);
+  const compareRef=useRef<HTMLDivElement>(null);
   const editor=useRef<HTMLFormElement>(null);
   const headers=token?{Authorization:`Bearer ${token}`}:undefined;
   useEffect(()=>{
@@ -28,7 +31,7 @@ export default function MajorCatalogue({token}:{token?:string}) {
     const params=new URLSearchParams({q:search,page:String(page),page_size:'12'});
     if(year)params.set('year',year);if(campus)params.set('campus',campus);
     api<Result>(`${token?'/admin':''}/majors?${params}`,{headers:token?{Authorization:`Bearer ${token}`}:undefined})
-      .then(data=>{if(active)setResult(data);}).catch(e=>{if(active){setResult({items:[],total:0});setError(e.message);}})
+      .then(data=>{if(active){setResult(data);setSelected(current=>current.map(chosen=>data.items.find(item=>item.id===chosen.id)||chosen));}}).catch(e=>{if(active){setResult({items:[],total:0});setError(e.message);}})
       .finally(()=>{if(active)setLoading(false);});
     return()=>{active=false;};
   },[token,search,year,campus,page,revision]);
@@ -52,18 +55,23 @@ export default function MajorCatalogue({token}:{token?:string}) {
   }
   function remove(item:Major){
     if(!window.confirm(`Xóa chương trình ${item.admission_code} — ${item.program_name} (${item.admission_year})? Thao tác này xóa khỏi danh mục ngành học.`))return;
-    run(async()=>{await api(`/admin/majors/${item.id}`,{method:'DELETE',headers});if(editing===item.id)setDraft(null);setNotice('Đã xóa ngành học.');setPage(1);setRevision(v=>v+1);});
+    run(async()=>{await api(`/admin/majors/${item.id}`,{method:'DELETE',headers});setSelected(current=>current.filter(chosen=>chosen.id!==item.id));if(editing===item.id)setDraft(null);setNotice('Đã xóa ngành học.');setPage(1);setRevision(v=>v+1);});
   }
   function importFile(){
     if(!jsonFile)return;
     run(async()=>{const form=new FormData();form.append('file',jsonFile);const response=await api<{inserted:number;skipped:number}>('/admin/majors/import',{method:'POST',headers,body:form});setNotice(`Đã thêm ${response.inserted} chương trình; bỏ qua ${response.skipped} bản ghi đã tồn tại.`);setPage(1);setRevision(v=>v+1);});
   }
+  function toggleCompare(item:Major){
+    setSelected(current=>current.some(chosen=>chosen.id===item.id)
+      ?current.filter(chosen=>chosen.id!==item.id)
+      :current.length<3?[...current,item]:current);
+  }
   function field<K extends keyof Draft>(key:K,value:Draft[K]){setDraft(d=>d?{...d,[key]:value}:d);}
   return <section className="major-catalogue">
-    <div className="major-heading"><div><div className="eyebrow">{isAdmin?'QUẢN TRỊ DANH MỤC':'KHÁM PHÁ NGÀNH HỌC'}</div><h1>{isAdmin?'Quản lý ngành học':'Chọn ngành, mở tương lai'}</h1><p className="muted">Tra cứu theo chương trình, năm tuyển sinh và cơ sở đào tạo.</p></div>{isAdmin&&<button className="primary" disabled={busy} onClick={()=>edit()}>＋ Thêm ngành học</button>}</div>
+    <div className="major-heading"><div><div className="eyebrow">{isAdmin?'QUẢN TRỊ DANH MỤC':'KHÁM PHÁ NGÀNH HỌC'}</div><h1>{isAdmin?'Quản lý ngành học':'Chọn ngành, mở tương lai'}</h1><p className="muted">Tra cứu theo chương trình, năm tuyển sinh và cơ sở đào tạo.</p></div>{canEdit&&<button className="primary" disabled={busy} onClick={()=>edit()}>＋ Thêm ngành học</button>}</div>
     {error&&<div className="error" role="alert">{error}</div>}{notice&&<div className="notice" role="status">{notice}</div>}
-    {isAdmin&&<details className="panel"><summary>Nhập ngành học từ JSON</summary><p className="muted">Chọn JSON có metadata và chi_tieu_YYYY → GHA/GSA → programs. Tối đa 2 MB. Bản ghi trùng năm, cơ sở và mã xét tuyển được bỏ qua.</p><input aria-label="Tệp JSON ngành học" type="file" accept=".json,application/json" onChange={e=>setJsonFile(e.target.files?.[0])}/><button disabled={busy||!jsonFile} onClick={importFile}>Nhập dữ liệu</button></details>}
-    {isAdmin&&draft&&<form className="panel major-editor" ref={editor} onSubmit={save}><h2>{editing?'Chỉnh sửa chương trình':'Thêm chương trình tuyển sinh'}</h2><fieldset disabled={busy}><div className="form-grid">
+    {canEdit&&<details className="panel"><summary>Nhập ngành học từ JSON</summary><p className="muted">Chọn JSON có metadata và chi_tieu_YYYY → GHA/GSA → programs. Tối đa 2 MB. Bản ghi trùng năm, cơ sở và mã xét tuyển được bỏ qua.</p><input aria-label="Tệp JSON ngành học" type="file" accept=".json,application/json" onChange={e=>setJsonFile(e.target.files?.[0])}/><button disabled={busy||!jsonFile} onClick={importFile}>Nhập dữ liệu</button></details>}
+    {canEdit&&draft&&<form className="panel major-editor" ref={editor} onSubmit={save}><h2>{editing?'Chỉnh sửa chương trình':'Thêm chương trình tuyển sinh'}</h2><fieldset disabled={busy}><div className="form-grid">
       <label>Mã xét tuyển<input required minLength={2} maxLength={30} value={draft.admission_code} onChange={e=>field('admission_code',e.target.value)}/></label>
       <label>Mã ngành<input required minLength={3} maxLength={30} value={draft.major_code} onChange={e=>field('major_code',e.target.value)}/></label>
       <label>Tên ngành<input required minLength={2} maxLength={300} value={draft.name} onChange={e=>field('name',e.target.value)}/></label>
@@ -79,15 +87,22 @@ export default function MajorCatalogue({token}:{token?:string}) {
     <div className="row-actions"><button className="primary" type="submit">Lưu ngành học</button><button type="button" onClick={()=>setDraft(null)}>Hủy</button></div></fieldset></form>}
     <form className="major-filters panel" onSubmit={e=>{e.preventDefault();setSearch(query);setPage(1);}}>
       <label>Tên ngành hoặc mã<input maxLength={100} placeholder="Công nghệ thông tin, GHA…" value={query} onChange={e=>setQuery(e.target.value)}/></label>
-      <label>Năm tuyển sinh<input type="number" min={2000} max={2100} step={1} placeholder="Tất cả" value={year} onChange={e=>{setYear(e.target.value);setPage(1);}}/></label>
+      <label>Năm tuyển sinh<select value={year} onChange={e=>{setYear(e.target.value);setPage(1);}}><option value="">Tất cả năm</option>{Array.from({length:101},(_,index)=>2100-index).map(value=><option key={value} value={value}>{value}</option>)}</select></label>
       <label>Cơ sở<select value={campus} onChange={e=>{setCampus(e.target.value);setPage(1);}}><option value="">Tất cả cơ sở</option><option value="hanoi">Hà Nội</option><option value="hcm">TP. Hồ Chí Minh</option></select></label><button type="submit">Tìm kiếm</button>
     </form>
     <div className="major-results" aria-live="polite">{loading?'Đang tải danh mục…':`${result.total} chương trình phù hợp`}</div>
+    <div className="major-compare-bar" aria-live="polite">
+      <div><strong>So sánh ngành học</strong><span>Chọn 2–3 chương trình trong danh sách, kể cả ở các trang hoặc bộ lọc khác nhau. Đã chọn {selected.length}/3.</span></div>
+      {selected.length>0&&<div className="major-compare-selected">{selected.map(item=><button type="button" key={item.id} onClick={()=>toggleCompare(item)} aria-label={`Bỏ ${item.admission_code} khỏi so sánh`} title={item.program_name}>{item.admission_code} ×</button>)}</div>}
+      <div className="major-compare-actions"><button type="button" disabled={selected.length<2} onClick={()=>compareRef.current?.scrollIntoView({behavior:'smooth',block:'start'})}>Xem bảng so sánh</button><button type="button" disabled={selected.length===0} onClick={()=>setSelected([])}>Xóa lựa chọn</button></div>
+    </div>
+    {selected.length>=2&&<MajorComparison items={selected} target={compareRef} remove={toggleCompare}/>}
     {!loading&&result.items.length===0&&<div className="panel muted">Không có ngành học phù hợp. Thử đổi từ khóa, năm hoặc cơ sở.</div>}
     {!loading&&result.items.length>0&&<div className="major-table-scroll" role="region" aria-label="Danh sách ngành học" tabIndex={0}>
       <table className="major-table">
         <caption className="sr-only">Danh sách chương trình tuyển sinh, trang {page}</caption>
         <thead><tr>
+          <th scope="col">So sánh</th>
           <th scope="col">Mã xét tuyển</th>
           <th scope="col">Ngành / chương trình</th>
           <th scope="col">Mã ngành</th>
@@ -99,8 +114,9 @@ export default function MajorCatalogue({token}:{token?:string}) {
           {isAdmin&&<th scope="col">Trạng thái / thao tác</th>}
         </tr></thead>
         <tbody>{result.items.map(item=><tr key={item.id}>
+          <td><button type="button" className="major-compare-pick" aria-pressed={selected.some(chosen=>chosen.id===item.id)} aria-label={`${selected.some(chosen=>chosen.id===item.id)?'Bỏ':'Chọn'} ${item.admission_code} ${item.program_name} để so sánh`} disabled={selected.length===3&&!selected.some(chosen=>chosen.id===item.id)} onClick={()=>toggleCompare(item)}>{selected.some(chosen=>chosen.id===item.id)?'Đã chọn':'Chọn'}</button></td>
           <td className="major-table-code">{item.admission_code}</td>
-          <td className="major-table-name"><strong>{item.name}</strong><span>{item.program_name}</span></td>
+          <td className="major-table-name"><strong>{item.name}</strong><span>{item.program_name}</span>{onViewCutoffs&&<button className="major-cutoff-button" type="button" onClick={()=>onViewCutoffs(item)} aria-label={`Xem điểm chuẩn ${item.program_name} ${item.admission_code}`}>Xem điểm chuẩn</button>}</td>
           <td>{item.major_code}</td>
           <td>{item.admission_year}</td>
           <td>{item.campus==='hanoi'?'Hà Nội':'TP. HCM'}</td>
@@ -112,11 +128,36 @@ export default function MajorCatalogue({token}:{token?:string}) {
               <a href={item.source_url} target="_blank" rel="noreferrer">Xem thông báo nguồn ↗</a>
             </div>
           </details></td>
-          {isAdmin&&<td className="major-table-actions"><span className={item.is_active?'status ready':'status'}>{item.is_active?'Hiển thị':'Đã ẩn'}</span><button disabled={busy} onClick={()=>edit(item)}>Sửa</button><button disabled={busy} onClick={()=>remove(item)}>Xóa</button></td>}
+          {isAdmin&&<td className="major-table-actions"><span className={item.is_active?'status ready':'status'}>{item.is_active?'Hiển thị':'Đã ẩn'}</span>{canEdit&&<button disabled={busy} onClick={()=>edit(item)}>Sửa</button>}{canEdit&&<button disabled={busy} onClick={()=>remove(item)}>Xóa</button>}</td>}
         </tr>)}</tbody>
       </table>
     </div>}
     <nav className="major-pagination" aria-label="Phân trang ngành học"><button disabled={loading||page===1} onClick={()=>setPage(v=>v-1)}>← Trước</button><span>Trang {page} / {Math.max(1,Math.ceil(result.total/12))}</span><button disabled={loading||page*12>=result.total} onClick={()=>setPage(v=>v+1)}>Sau →</button></nav>
     <p className="disclaimer">Chỉ tiêu là dự kiến theo dữ liệu nguồn. Đối chiếu thông báo chính thức của trường trước khi đăng ký.</p>
   </section>;
+}
+
+
+function MajorComparison({items,target,remove}:{items:Major[];target:React.RefObject<HTMLDivElement | null>;remove:(item:Major)=>void}){
+  const rows: {label:string;values:(item:Major)=>React.ReactNode}[] = [
+    {label:'Mã xét tuyển',values:item=>item.admission_code},
+    {label:'Mã ngành',values:item=>item.major_code},
+    {label:'Năm tuyển sinh',values:item=>item.admission_year},
+    {label:'Cơ sở',values:item=>item.campus==='hanoi'?'Hà Nội · GHA':'TP. HCM · GSA'},
+    {label:'Tổ hợp xét tuyển',values:item=>item.subject_groups.length?item.subject_groups.join(', '):'Theo thông báo riêng / chưa công bố'},
+    {label:'Phương thức',values:item=>item.methods.length?<ul>{item.methods.map(method=><li key={method}>{methodNames[method]?`${method}: ${methodNames[method]}`:method}</li>)}</ul>:'Chưa công bố'},
+    {label:'Chỉ tiêu dự kiến',values:item=>item.quota===null?'Chưa công bố':item.quota.toLocaleString('vi-VN')},
+    {label:'Nguồn',values:item=><a href={item.source_url} target="_blank" rel="noreferrer">Xem thông báo tuyển sinh ↗</a>},
+  ];
+  return <div className="major-comparison panel" ref={target}>
+    <h2>Bảng so sánh {items.length} chương trình</h2>
+    <div className="major-compare-scroll" role="region" aria-label="Bảng so sánh ngành học" tabIndex={0}>
+      <table>
+        <caption className="sr-only">So sánh mã xét tuyển, tổ hợp, phương thức, chỉ tiêu và cơ sở của {items.length} chương trình</caption>
+        <thead><tr><th scope="col">Tiêu chí</th>{items.map(item=><th scope="col" key={item.id}><strong>{item.program_name}</strong><button type="button" onClick={()=>remove(item)} aria-label={`Bỏ ${item.admission_code} khỏi bảng so sánh`}>Bỏ chọn</button></th>)}</tr></thead>
+        <tbody>{rows.map(row=><tr key={row.label}><th scope="row">{row.label}</th>{items.map(item=><td key={item.id}>{row.values(item)}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+    <p className="muted">Chỉ tiêu là dự kiến. Xem thông báo chính thức của trường trước khi đăng ký.</p>
+  </div>;
 }

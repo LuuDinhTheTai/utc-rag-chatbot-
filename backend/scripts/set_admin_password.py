@@ -13,10 +13,10 @@ confirmation = getpass.getpass('Confirm new password: ')
 if len(password) < 16 or password != confirmation:
     raise SystemExit('Password too short or confirmation does not match.')
 with connect() as conn:
-    row = conn.execute('SELECT id FROM admins WHERE email=?', (email,)).fetchone()
+    row = conn.execute("SELECT id FROM accounts WHERE role='admin' AND email=?", (email,)).fetchone()
     if not row:
         raise SystemExit('Admin account not found.')
-    conn.execute('UPDATE admins SET password_hash=? WHERE id=?',
+    conn.execute('UPDATE accounts SET password_hash=? WHERE id=?',
                  (password_hash(password), row['id']))
-    conn.execute('DELETE FROM admin_sessions WHERE admin_id=?', (row['id'],))
+    conn.execute('DELETE FROM auth_sessions WHERE account_id=?', (row['id'],))
 print('Password changed; existing sessions revoked.')

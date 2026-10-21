@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     frontend_origin: str = 'http://localhost:3000'
     default_year: int = 2026
     similarity_threshold: float = 0.65
+    rate_limit_global: int = 120
+    rate_limit_chat: int = 20
+    rate_limit_login: int = 5
+    rate_limit_admin_write: int = 30
 
 
 @lru_cache

@@ -34,7 +34,8 @@ class ItemInput(BaseModel):
     is_active: bool = True
 
 
-def make_router(db, admin):
+def make_router(db, admin, can_edit=None):
+    can_edit = can_edit or admin
     router = APIRouter(tags=['Tân sinh viên'])
 
     def guide_for(cohort, published=True):
@@ -87,7 +88,7 @@ def make_router(db, admin):
 
     @router.post('/admin/freshmen', status_code=201)
     def create_guide(cohort: str = Form(...), title: str = Form(...), admission_year: int = Form(...),
-                     file: UploadFile = File(...), uid=Depends(admin)):
+                     file: UploadFile = File(...), uid=Depends(can_edit)):
         cohort = cohort.strip().upper()
         if not re.fullmatch(r'K[0-9]{1,4}', cohort):
             raise HTTPException(422, 'Mã khóa có dạng K67.')
@@ -110,7 +111,7 @@ def make_router(db, admin):
         return rows[0]
 
     @router.patch('/admin/freshmen/{cohort}')
-    def update_guide(cohort: str, body: GuideUpdate, uid=Depends(admin)):
+    def update_guide(cohort: str, body: GuideUpdate, uid=Depends(can_edit)):
         guide = guide_for(cohort, False)
         rows = db().table('freshman_guides').update(
             body.model_dump() | {'updated_at': datetime.now(timezone.utc).isoformat()}
@@ -118,7 +119,7 @@ def make_router(db, admin):
         return rows[0]
 
     @router.delete('/admin/freshmen/{cohort}')
-    def delete_guide(cohort: str, uid=Depends(admin)):
+    def delete_guide(cohort: str, uid=Depends(can_edit)):
         guide = guide_for(cohort, False)
         db().storage.from_(BUCKET).remove([guide['storage_path']])
         db().table('freshman_guides').delete().eq('id', guide['id']).execute()
@@ -136,19 +137,19 @@ def make_router(db, admin):
         return rows[0]
 
     @router.post('/admin/freshmen/{cohort}/items', status_code=201)
-    def create_item(cohort: str, body: ItemInput, uid=Depends(admin)):
+    def create_item(cohort: str, body: ItemInput, uid=Depends(can_edit)):
         guide = guide_for(cohort, False)
         return write(db().table('freshman_items').insert(body.model_dump() | {'guide_id': guide['id']}))
 
     @router.patch('/admin/freshmen/{cohort}/items/{item_id}')
-    def update_item(cohort: str, item_id: UUID, body: ItemInput, uid=Depends(admin)):
+    def update_item(cohort: str, item_id: UUID, body: ItemInput, uid=Depends(can_edit)):
         guide = guide_for(cohort, False)
         return write(db().table('freshman_items').update(
             body.model_dump() | {'updated_at': datetime.now(timezone.utc).isoformat()}
         ).eq('id', str(item_id)).eq('guide_id', guide['id']))
 
     @router.delete('/admin/freshmen/{cohort}/items/{item_id}')
-    def delete_item(cohort: str, item_id: UUID, uid=Depends(admin)):
+    def delete_item(cohort: str, item_id: UUID, uid=Depends(can_edit)):
         guide = guide_for(cohort, False)
         write(db().table('freshman_items').delete().eq('id', str(item_id)).eq('guide_id', guide['id']))
         return {'deleted': True}

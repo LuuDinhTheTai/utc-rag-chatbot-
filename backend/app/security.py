@@ -1,4 +1,4 @@
-"""Password hashing for local administrator accounts."""
+"""Password hashing for local user accounts."""
 import hashlib
 import hmac
 import secrets
