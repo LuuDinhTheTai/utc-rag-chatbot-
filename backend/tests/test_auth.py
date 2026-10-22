@@ -114,6 +114,8 @@ def test_migration_preserves_legacy_credentials_once(tmp_path, monkeypatch):
         conn.execute('CREATE TABLE admins(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,role TEXT,is_active INTEGER)')
         for role in ['admin','editor','viewer']:
             conn.execute('INSERT INTO admins VALUES(?,?,?,?,1)', (role, role+'@example.com', password_hash('legacy-password-123456'), role))
+    from app.migrations import migrate
+    migrate(tmp_path, apply=True, offline=True)
     with connect() as conn:
         assert [row[0] for row in conn.execute('SELECT role FROM accounts ORDER BY id')] == ['admin','lecturer','student']
         assert check_password('legacy-password-123456', conn.execute("SELECT password_hash FROM accounts WHERE id='admin'").fetchone()[0])

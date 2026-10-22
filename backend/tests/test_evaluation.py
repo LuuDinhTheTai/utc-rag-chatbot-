@@ -16,6 +16,7 @@ SOURCE_B = 'https://tuyensinh.utc.edu.vn/source-b'
 def rag_store(tmp_path, monkeypatch):
     monkeypatch.setenv('DATA_DIR', str(tmp_path))
     monkeypatch.setenv('GOOGLE_API_KEY', 'test-only-key')
+    monkeypatch.setenv('EMBEDDING_DIMENSIONS', '2')
     settings.cache_clear()
     database = Database()
     for url, vector in ((SOURCE_A, [1.0, 0.0]), (SOURCE_B, [0.0, 1.0])):

@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +11,7 @@ class Settings(BaseSettings):
     google_api_key: str = ''
     gemini_model: str = 'gemini-2.5-flash'
     embedding_model: str = 'gemini-embedding-001'
+    embedding_dimensions: int = Field(default=768, ge=1, le=3072)
     frontend_origin: str = 'http://localhost:3000'
     default_year: int = 2026
     similarity_threshold: float = 0.65

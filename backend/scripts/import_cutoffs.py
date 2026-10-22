@@ -58,11 +58,11 @@ def parse_cutoffs(data):
 
 
 def import_cutoffs(rows):
-    inserted = 0
+    from app.v2store import import_cutoff_rows
     with connect() as conn:
-        for row in rows:
-            inserted += conn.execute('INSERT OR IGNORE INTO cutoff_scores (admission_year,campus,admission_code,program_name,method,score,scale,source_url,note,search_text) VALUES (?,?,?,?,?,?,?,?,?,?)', row).rowcount
-    return {'inserted': inserted, 'skipped': len(rows)-inserted, 'total': len(rows)}
+        conn.execute('BEGIN IMMEDIATE')
+        return import_cutoff_rows(conn, rows)
+
 
 
 if __name__ == '__main__':

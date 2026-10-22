@@ -100,7 +100,7 @@ def fetch_url(url):
 
 def embeddings():
     cfg = settings()
-    return GoogleGenerativeAIEmbeddings(model=cfg.embedding_model, google_api_key=cfg.google_api_key, output_dimensionality=768)
+    return GoogleGenerativeAIEmbeddings(model=cfg.embedding_model, google_api_key=cfg.google_api_key, output_dimensionality=cfg.embedding_dimensions)
 
 
 def chunks(text):

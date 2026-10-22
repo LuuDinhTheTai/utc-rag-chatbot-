@@ -12,31 +12,9 @@ from pathlib import Path
 from uuid import uuid4
 
 from .config import settings
+from .v2store import relation, write
 
 
-SCHEMA = """
-PRAGMA foreign_keys=ON;
-CREATE TABLE IF NOT EXISTS admins (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'admin' CHECK(role IN ('admin','editor','viewer')), is_active INTEGER NOT NULL DEFAULT 1);
-CREATE TABLE IF NOT EXISTS admin_sessions (token_hash TEXT PRIMARY KEY, admin_id TEXT NOT NULL REFERENCES admins(id) ON DELETE CASCADE, expires_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY, email TEXT NOT NULL COLLATE NOCASE UNIQUE, display_name TEXT NOT NULL DEFAULT '', password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('student','lecturer','admin')), is_active INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0,1)), created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS auth_sessions (token_hash TEXT PRIMARY KEY, account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, expires_at TEXT NOT NULL, created_at TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS auth_sessions_account ON auth_sessions(account_id);
-CREATE TABLE IF NOT EXISTS api_rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY(key,window_start));
-CREATE INDEX IF NOT EXISTS api_rate_limits_window ON api_rate_limits(window_start);
-CREATE TABLE IF NOT EXISTS chat_sessions (id TEXT PRIMARY KEY, token_hash TEXT UNIQUE NOT NULL, created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE, role TEXT NOT NULL, content TEXT NOT NULL, question TEXT, sources TEXT NOT NULL DEFAULT '[]', supported INTEGER, latency_ms INTEGER, created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS feedback (id TEXT PRIMARY KEY, message_id TEXT UNIQUE NOT NULL REFERENCES messages(id) ON DELETE CASCADE, rating INTEGER NOT NULL, comment TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY, title TEXT NOT NULL, source_url TEXT NOT NULL, admission_year INTEGER NOT NULL, campus TEXT NOT NULL, category TEXT NOT NULL, checksum TEXT UNIQUE NOT NULL, raw_text TEXT NOT NULL, status TEXT NOT NULL, chunk_count INTEGER NOT NULL DEFAULT 0, error TEXT, created_by TEXT, storage_path TEXT, original_filename TEXT, original_size INTEGER, created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS document_chunks (id TEXT PRIMARY KEY, document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE, chunk_index INTEGER NOT NULL, content TEXT NOT NULL, embedding TEXT NOT NULL, UNIQUE(document_id, chunk_index));
-CREATE INDEX IF NOT EXISTS chunks_document ON document_chunks(document_id);
-CREATE INDEX IF NOT EXISTS documents_filter ON documents(admission_year,campus,status);
-CREATE TABLE IF NOT EXISTS major_catalogue (id TEXT PRIMARY KEY, admission_code TEXT NOT NULL, major_code TEXT NOT NULL, name TEXT NOT NULL, program_name TEXT NOT NULL, admission_year INTEGER NOT NULL, campus TEXT NOT NULL, quota INTEGER, methods TEXT NOT NULL DEFAULT '[]', subject_groups TEXT NOT NULL DEFAULT '[]', notes TEXT NOT NULL DEFAULT '', source_url TEXT NOT NULL, is_active INTEGER NOT NULL DEFAULT 1, search_text TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(admission_year,campus,admission_code));
-CREATE TABLE IF NOT EXISTS cutoff_scores (admission_year INTEGER NOT NULL, campus TEXT NOT NULL CHECK(campus IN ('hanoi','hcm')), admission_code TEXT NOT NULL, program_name TEXT NOT NULL, method TEXT NOT NULL CHECK(method IN ('PT1','PT2','PT3','PT4')), score REAL NOT NULL, scale INTEGER NOT NULL, source_url TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', search_text TEXT NOT NULL, PRIMARY KEY(admission_year,campus,admission_code,method));
-CREATE INDEX IF NOT EXISTS cutoff_scores_filters ON cutoff_scores(admission_year,campus,method);
-CREATE TABLE IF NOT EXISTS freshman_guides (id TEXT PRIMARY KEY, cohort TEXT UNIQUE NOT NULL, admission_year INTEGER NOT NULL, title TEXT NOT NULL, storage_path TEXT NOT NULL, is_published INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS freshman_items (id TEXT PRIMARY KEY, guide_id TEXT NOT NULL REFERENCES freshman_guides(id) ON DELETE CASCADE, code TEXT NOT NULL, category TEXT NOT NULL, title TEXT NOT NULL, applies_to TEXT NOT NULL DEFAULT '', evidence TEXT NOT NULL DEFAULT '', source_page INTEGER NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0, is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(guide_id,category,code));
-"""
 JSON_FIELDS = {'sources', 'embedding', 'methods', 'subject_groups'}
 BOOL_FIELDS = {'supported', 'is_active', 'is_published'}
 TABLES = {'chat_sessions', 'messages', 'feedback', 'documents', 'document_chunks', 'major_catalogue', 'freshman_guides', 'freshman_items'}
@@ -47,56 +25,32 @@ def now():
 
 
 def connect():
+    from .migrations import initialize, is_v2
     path = Path(settings().data_dir).resolve() / 'utc.sqlite3'
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path, timeout=30)
     conn.row_factory = sqlite3.Row
-    conn.execute('PRAGMA foreign_keys=ON')
-    conn.execute('PRAGMA journal_mode=WAL')
-    conn.executescript(SCHEMA)
-    message_columns = {row['name'] for row in conn.execute('PRAGMA table_info(messages)')}
-    for name, kind in [('resolved_question', 'TEXT'), ('context_year', 'INTEGER'), ('context_campus', 'TEXT')]:
-        if name not in message_columns:
-            conn.execute(f'ALTER TABLE messages ADD COLUMN {name} {kind}')
-    conn.execute('CREATE INDEX IF NOT EXISTS messages_session_created ON messages(session_id,created_at)')
-    columns = {row['name'] for row in conn.execute('PRAGMA table_info(admins)')}
-    if 'role' not in columns:
-        conn.execute("ALTER TABLE admins ADD COLUMN role TEXT NOT NULL DEFAULT 'admin' CHECK(role IN ('admin','editor','viewer'))")
-    if 'is_active' not in columns:
-        conn.execute('ALTER TABLE admins ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1')
-    conn.commit()
-    # Run once under a write lock. Preserve legacy rows and IDs for audit/foreign keys;
-    # legacy session tokens are intentionally not accepted by the new auth module.
-    conn.execute('BEGIN IMMEDIATE')
     try:
-        if not conn.execute("SELECT 1 FROM schema_migrations WHERE version='accounts_v1'").fetchone():
-            timestamp = now()
-            conn.execute("INSERT INTO accounts(id,email,display_name,password_hash,role,is_active,created_at,updated_at) "
-                         "SELECT id,lower(trim(email)),'',password_hash,CASE role WHEN 'editor' THEN 'lecturer' WHEN 'viewer' THEN 'student' ELSE 'admin' END,is_active,?,? FROM admins",
-                         (timestamp, timestamp))
-            conn.execute("INSERT INTO schema_migrations VALUES('accounts_v1',?)", (timestamp,))
-        session_columns = {row['name'] for row in conn.execute('PRAGMA table_info(chat_sessions)')}
-        if 'account_id' not in session_columns:
-            conn.execute('ALTER TABLE chat_sessions ADD COLUMN account_id TEXT REFERENCES accounts(id) ON DELETE CASCADE')
-        conn.commit()
+        conn.execute('PRAGMA foreign_keys=ON')
+        if not is_v2(conn):
+            initialize(conn)  # Empty databases only; legacy migration must be explicit/offline.
+        conn.execute('PRAGMA journal_mode=WAL')
+        return conn
     except Exception:
-        conn.rollback()
         conn.close()
         raise
-    return conn
 
 
 def decoded(row):
     value = dict(row)
+    if "campus" in value:
+        value.pop("campus_code", None)
     for key in JSON_FIELDS & value.keys():
         value[key] = json.loads(value[key]) if isinstance(value[key], str) else value[key]
     for key in BOOL_FIELDS & value.keys():
         value[key] = bool(value[key]) if value[key] is not None else None
     return value
 
-
-def encoded(value):
-    return {k: json.dumps(v, ensure_ascii=False) if k in JSON_FIELDS else int(v) if k in BOOL_FIELDS and v is not None else v for k, v in value.items()}
 
 
 @dataclass
@@ -172,6 +126,7 @@ class Query:
 
     def execute(self):
         clause = ' WHERE ' + ' AND '.join(self.where) if self.where else ''
+        source = relation(self.table)
         with connect() as conn:
             if self.mode == 'select':
                 fields = self.fields
@@ -179,8 +134,8 @@ class Query:
                     fields = ','.join(f.strip() for f in fields.split(','))
                 elif '(' in fields:
                     fields = '*'
-                total = conn.execute(f'SELECT count(*) FROM {self.table}{clause}', self.params).fetchone()[0] if self.want_count else None
-                sql = f'SELECT {fields} FROM {self.table}{clause}'
+                total = conn.execute(f'SELECT count(*) FROM {source}{clause}', self.params).fetchone()[0] if self.want_count else None
+                sql = f'SELECT {fields} FROM {source}{clause}'
                 if self.sort:
                     sql += ' ORDER BY ' + ','.join(self.sort)
                 if self.max_rows is not None:
@@ -189,39 +144,39 @@ class Query:
                 else:
                     rows = conn.execute(sql, self.params).fetchall()
                 return Result([decoded(row) for row in rows], total)
+            # Serialize composite writes and upsert conflict checks in one transaction.
+            conn.execute('BEGIN IMMEDIATE')
             if self.mode in {'insert', 'upsert'}:
                 records = self.values if isinstance(self.values, list) else [self.values]
                 result = []
-                for record in records:
-                    record = encoded({'id': str(uuid4())} | ({'created_at': now()} if self.table != 'document_chunks' else {}) | record)
-                    if self.table in {'major_catalogue', 'freshman_guides', 'freshman_items'}:
+                for values in records:
+                    record = {'id': str(uuid4())} | ({'created_at': now()} if self.table != 'document_chunks' else {}) | values
+                    if self.table in {'major_catalogue','freshman_guides','freshman_items','documents'}:
                         record.setdefault('updated_at', now())
-                    columns = list(record)
-                    verb = 'INSERT OR IGNORE' if self.mode == 'upsert' and self.ignore_duplicates else 'INSERT'
-                    sql = f'{verb} INTO {self.table} ({",".join(columns)}) VALUES ({",".join("?" for _ in columns)})'
-                    if self.mode == 'upsert' and not self.ignore_duplicates:
-                        target = self.conflict or 'id'
-                        updates = ','.join(f'{k}=excluded.{k}' for k in columns if k not in target.split(',') and k not in {'id','created_at'})
-                        sql += f' ON CONFLICT({target}) DO UPDATE SET {updates}'
-                    cursor = conn.execute(sql, list(record.values()))
-                    if cursor.rowcount:
-                        if self.mode == 'upsert' and self.conflict and not self.ignore_duplicates:
-                            fields = self.conflict.split(',')
-                            lookup = ' AND '.join(f'{field}=?' for field in fields)
-                            found = conn.execute(f'SELECT * FROM {self.table} WHERE {lookup}',
-                                                 [record[field] for field in fields]).fetchone()
-                        else:
-                            found = conn.execute(f'SELECT * FROM {self.table} WHERE id=?', (record['id'],)).fetchone()
-                        result.append(decoded(found))
-
+                    found = None
+                    if self.mode == 'upsert':
+                        fields = (self.conflict or 'id').split(',')
+                        lookup = ' AND '.join(f'{field}=?' for field in fields)
+                        found = conn.execute(f'SELECT * FROM {source} WHERE {lookup}', [record[field] for field in fields]).fetchone()
+                    if found and self.ignore_duplicates:
+                        continue
+                    if found:
+                        record = decoded(found) | values | {'id':found['id']}
+                    identifier = write(conn,self.table,record,update=bool(found))
+                    result.append(decoded(conn.execute(f'SELECT * FROM {source} WHERE id=?',(identifier,)).fetchone()))
                 return Result(result)
-            rows = conn.execute(f'SELECT * FROM {self.table}{clause}', self.params).fetchall()
+            rows = conn.execute(f'SELECT * FROM {source}{clause}', self.params).fetchall()
             if self.mode == 'update':
-                value = encoded(self.values)
-                sql = f'UPDATE {self.table} SET ' + ','.join(f'{k}=?' for k in value) + clause
-                conn.execute(sql, list(value.values()) + self.params)
-                return Result([decoded(conn.execute(f'SELECT * FROM {self.table} WHERE id=?', (row['id'],)).fetchone()) for row in rows])
-            conn.execute(f'DELETE FROM {self.table}{clause}', self.params)
+                result = []
+                for row in rows:
+                    record = decoded(row) | self.values
+                    if self.table in {'major_catalogue','documents','freshman_guides','freshman_items'}:
+                        record['updated_at'] = now()
+                    identifier = write(conn,self.table,record,update=True)
+                    result.append(decoded(conn.execute(f'SELECT * FROM {source} WHERE id=?',(identifier,)).fetchone()))
+                return Result(result)
+            for row in rows:
+                conn.execute(f'DELETE FROM {self.table} WHERE id=?',(row['id'],))
             return Result([decoded(row) for row in rows])
 
 
@@ -273,8 +228,11 @@ class RPC:
         if self.name == 'match_chunks':
             a = self.args
             with connect() as conn:
-                rows = conn.execute('SELECT c.id,c.document_id,c.content,c.embedding,d.title,d.source_url,d.admission_year,d.campus FROM document_chunks c JOIN documents d ON d.id=c.document_id WHERE d.status=? AND d.admission_year=? AND d.campus=?', ('ready', a['filter_year'], a['filter_campus'])).fetchall()
+                from .v2store import model_id
+                rows = conn.execute('SELECT c.id,c.document_id,c.content,e.vector AS embedding,d.title,d.source_url,d.admission_year,d.campus_code AS campus FROM document_chunks c JOIN chunk_embeddings e ON e.chunk_id=c.id JOIN documents d ON d.id=c.document_id WHERE d.status=? AND d.admission_year=? AND d.campus_code=? AND e.model_id=?', ('ready', a['filter_year'], a['filter_campus'], model_id())).fetchall()
             query = a['query_embedding']
+            if len(query) != settings().embedding_dimensions:
+                raise ValueError('Query embedding dimensions do not match configured model')
             norm = math.sqrt(sum(x*x for x in query))
             result = []
             for row in rows:
@@ -293,22 +251,19 @@ class RPC:
         if self.name == 'import_majors':
             inserted = skipped = 0
             with connect() as conn:
+                conn.execute('BEGIN IMMEDIATE')
                 for row in self.args['p_rows']:
                     existing = conn.execute(
-                        'SELECT id FROM major_catalogue WHERE admission_year=? AND campus=? AND admission_code=?',
+                        'SELECT m.id FROM major_catalogue m JOIN admission_offerings o ON o.id=m.id WHERE o.admission_year=? AND o.campus_code=? AND o.admission_code=?',
                         (row['admission_year'], row['campus'], row['admission_code'])).fetchone()
                     if existing:
                         skipped += 1
                         continue
-                    record = encoded({
+                    record = {
                         'id': str(uuid4()), 'created_at': now(), 'updated_at': now(),
-                        'search_text': ' '.join(str(row[k]) for k in
-                                                ('admission_code','major_code','name','program_name'))
-                    } | row)
-                    columns = list(record)
-                    conn.execute(
-                        f'INSERT INTO major_catalogue ({",".join(columns)}) VALUES ({",".join("?" for _ in columns)})',
-                        list(record.values()))
+                        'search_text': ' '.join(str(row[k]) for k in ('admission_code','major_code','name','program_name'))
+                    } | row
+                    write(conn,'major_catalogue',record)
                     inserted += 1
             return Result({'inserted': inserted, 'skipped': skipped, 'total': inserted + skipped})
         raise ValueError('Unknown RPC')

@@ -5,6 +5,9 @@ from typing import Literal
 from fastapi import APIRouter, Query
 
 from .localdb import connect
+from .v2store import relation
+
+CUTOFFS = relation("cutoff_scores")
 
 router = APIRouter(tags=['Điểm chuẩn'])
 
@@ -17,9 +20,9 @@ def search_key(value: str) -> str:
 @router.get('/cutoffs/options')
 def options():
     with connect() as conn:
-        years = [row[0] for row in conn.execute('SELECT DISTINCT admission_year FROM cutoff_scores ORDER BY admission_year DESC')]
-        methods = [row[0] for row in conn.execute('SELECT DISTINCT method FROM cutoff_scores ORDER BY method')]
-        majors = [row[0] for row in conn.execute('SELECT DISTINCT program_name FROM cutoff_scores ORDER BY program_name COLLATE NOCASE')]
+        years = [row[0] for row in conn.execute(f'SELECT DISTINCT admission_year FROM {CUTOFFS} ORDER BY admission_year DESC')]
+        methods = [row[0] for row in conn.execute(f'SELECT DISTINCT method FROM {CUTOFFS} ORDER BY method')]
+        majors = [row[0] for row in conn.execute(f'SELECT DISTINCT program_name FROM {CUTOFFS} ORDER BY program_name COLLATE NOCASE')]
     return {'years': years, 'methods': methods, 'majors': majors}
 
 
@@ -57,6 +60,6 @@ def list_cutoffs(
         values.append(method)
     where = ' WHERE ' + ' AND '.join(terms) if terms else ''
     with connect() as conn:
-        total = conn.execute('SELECT count(*) FROM cutoff_scores' + where, values).fetchone()[0]
-        records = conn.execute('SELECT admission_year,campus,admission_code,program_name,method,score,scale,source_url,note FROM cutoff_scores' + where + ' ORDER BY admission_year DESC,campus,admission_code,method LIMIT ? OFFSET ?', values + [page_size, (page-1)*page_size]).fetchall()
+        total = conn.execute(f'SELECT count(*) FROM {CUTOFFS}' + where, values).fetchone()[0]
+        records = conn.execute(f'SELECT admission_year,campus,admission_code,program_name,method,score,scale,source_url,note FROM {CUTOFFS}' + where + ' ORDER BY admission_year DESC,campus,admission_code,method LIMIT ? OFFSET ?', values + [page_size, (page-1)*page_size]).fetchall()
     return {'items': [dict(row) for row in records], 'total': total, 'page': page, 'page_size': page_size}

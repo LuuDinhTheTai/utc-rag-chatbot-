@@ -15,6 +15,7 @@ def self_hosted(tmp_path, monkeypatch):
     monkeypatch.setenv('ADMIN_EMAIL', 'admin@example.com')
     monkeypatch.setenv('ADMIN_PASSWORD', 'strong-test-password-123')
     monkeypatch.setenv('GOOGLE_API_KEY', 'test-only-key')
+    monkeypatch.setenv('EMBEDDING_DIMENSIONS', '3')
     settings.cache_clear()
     with TestClient(main.app) as client:
         login = client.post('/admin/login', json={

@@ -317,7 +317,8 @@ def review(uid=Depends(admin)):
     feedback = db().table('feedback').select('*').order('created_at', desc=True).limit(100).execute().data
     with connect() as conn:
         for item in feedback:
-            row = conn.execute('SELECT content,sources FROM messages WHERE id=?', (item['message_id'],)).fetchone()
+            from .v2store import relation
+            row = conn.execute(f'SELECT content,sources FROM {relation("messages")} WHERE id=?', (item['message_id'],)).fetchone()
             item['messages'] = {'content': row['content'], 'sources': __import__('json').loads(row['sources'])} if row else None
     return {'unanswered': unanswered, 'feedback': feedback}
 

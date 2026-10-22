@@ -1,5 +1,7 @@
 # Kiến trúc và cách hoạt động của dự án UTC RAG Chatbot
 
+Database hiện dùng [schema v2](DATABASE-V2.md) và [ERD trong README](../README.md#thiết-kế-database-v2-và-erd). `localdb.py` giữ facade API, `v2store.py` đọc/ghi các quan hệ chuẩn hóa, `migrations.py` chuyển đổi offline; các trường JSON phía dưới mô tả hợp đồng API, không đồng nghĩa với cột vật lý.
+
 Tài liệu này mô tả mã nguồn hiện tại. Điểm khởi đầu là [README](../README.md), nơi có hướng dẫn cài đặt, cấu hình và vận hành.
 
 ## 1. Tổng quan

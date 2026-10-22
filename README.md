@@ -8,6 +8,7 @@ Tài liệu phân tích từng module, luồng xử lý và cấu trúc lưu tr�
 
 - [Chức năng](#chức-năng)
 - [Kiến trúc và luồng dữ liệu](#kiến-trúc-và-luồng-dữ-liệu)
+- [Thiết kế database v2 và ERD](#thiết-kế-database-v2-và-erd)
 - [Yêu cầu và cấu hình](#yêu-cầu-và-cấu-hình)
 - [Chạy trên Windows](#chạy-trên-windows)
 - [Chạy trên Linux hoặc macOS](#chạy-trên-linux-hoặc-macos)
@@ -26,7 +27,7 @@ Tài liệu phân tích từng module, luồng xử lý và cấu trúc lưu tr�
 - **Chat theo ngữ cảnh:** câu hỏi tiếp nối được diễn giải thành câu hỏi độc lập từ tối đa 8 tin nhắn gần nhất của cùng phiên trước khi tìm nguồn. Khi chưa rõ đối tượng, chatbot hỏi lại. Lịch sử không được dùng làm bằng chứng cho câu trả lời.
 - **Phạm vi hội thoại:** năm/cơ sở được nêu trong câu hỏi ưu tiên hơn bộ lọc; giao diện cập nhật bộ lọc sau mỗi câu trả lời và khôi phục khi tải lại trang. Thay bộ lọc để đổi phạm vi cho câu tiếp theo. Nút **Cuộc trò chuyện mới** đặt lại phiên, nội dung nhập và bộ lọc; lịch sử cũ không được đưa vào phiên mới.
 
-Khi có lịch sử, mỗi câu hỏi có thêm một lượt gọi Gemini để diễn giải ngữ cảnh. Dữ liệu gửi ở bước này gồm tối đa 8 tin nhắn gần nhất (nội dung mỗi tin giới hạn 2.000 ký tự), câu hỏi đã diễn giải và năm/cơ sở. SQLite tự bổ sung các cột ngữ cảnh khi mở cơ sở dữ liệu cũ.
+Khi có lịch sử, mỗi câu hỏi có thêm một lượt gọi Gemini để diễn giải ngữ cảnh. Dữ liệu gửi ở bước này gồm tối đa 8 tin nhắn gần nhất (nội dung mỗi tin giới hạn 2.000 ký tự), câu hỏi đã diễn giải và năm/cơ sở. Database cũ cần chạy migration v2 trước khi mở bằng phiên bản ứng dụng này; các trường ngữ cảnh được giữ lại khi chuyển đổi.
 
 - **Hỏi đáp tuyển sinh:** lọc theo năm và cơ sở Hà Nội/TP. Hồ Chí Minh; hiển thị trích dẫn, liên kết nguồn, lịch sử hội thoại và đánh giá câu trả lời.
 - **Kho tài liệu:** quản trị viên xem trước nội dung từ URL hoặc tệp, xác nhận lập chỉ mục, tải lại tệp gốc, tạm ẩn, thử lại khi lập chỉ mục lỗi và xóa tài liệu.
@@ -50,6 +51,147 @@ Khi quản trị viên thêm tài liệu, backend trích xuất văn bản, chia
 
 **Dữ liệu gửi cho Gemini:** câu hỏi, văn bản của các đoạn được chọn và yêu cầu tạo câu trả lời; khi lập chỉ mục, nội dung các đoạn được gửi để tạo embedding. Cơ sở dữ liệu, phiên đăng nhập và tệp gốc nằm trên máy chủ của bạn.
 
+## Thiết kế database v2 và ERD
+
+Database v2 tiếp tục dùng **SQLite**, chuẩn hóa quan hệ tuyển sinh, trích dẫn và embedding theo [skill database-design](https://github.com/MoizIbnYousaf/ai-agent-skills/blob/main/skills/database-design/SKILL.md). DDL có thể chạy trên database trống tại [`backend/schema/v2.sql`](backend/schema/v2.sql); quyết định thiết kế và lộ trình migration tại [Database v2](docs/DATABASE-V2.md).
+
+**Trạng thái:** runtime đã dùng schema v2; database trống được khởi tạo tự động. Với database cũ, dừng backend và các tiến trình ghi rồi chạy `backend/scripts/migrate_database.py` theo [hướng dẫn migration](docs/DATABASE-V2.md#chạy-migration). Không chạy DDL trực tiếp lên database có dữ liệu. API giữ nguyên các trường JSON hiện tại thông qua lớp adapter.
+
+```mermaid
+erDiagram
+    accounts ||--o{ auth_sessions : authenticates
+    accounts o|--o{ chat_sessions : owns
+    accounts o|--o{ documents : creates
+    campuses ||--o{ admission_offerings : hosts
+    admission_offerings ||--o| major_catalogue : describes
+    admission_offerings ||--o{ cutoff_scores : has
+    admission_methods ||--o{ cutoff_scores : scores
+    major_catalogue ||--o{ offering_methods : accepts
+    admission_methods ||--o{ offering_methods : defines
+    major_catalogue ||--o{ offering_subject_groups : accepts
+    campuses ||--o{ documents : scopes
+    campuses o|--o{ messages : contextualizes
+    documents ||--o{ document_chunks : contains
+    document_chunks ||--o{ chunk_embeddings : embeds
+    embedding_models ||--o{ chunk_embeddings : produces
+    chat_sessions ||--o{ messages : contains
+    messages ||--o{ message_citations : cites
+    document_chunks o|--o{ message_citations : references
+    messages ||--o| feedback : receives
+    freshman_guides ||--o{ freshman_items : contains
+
+    accounts {
+        text id PK
+        text email UK
+        text role
+        text password_hash
+    }
+    auth_sessions {
+        text token_hash PK
+        text account_id FK
+        text expires_at
+    }
+    campuses {
+        text code PK
+        text name
+    }
+    admission_offerings {
+        text id PK
+        int admission_year
+        text campus_code FK
+        text admission_code
+        text program_name
+    }
+    major_catalogue {
+        text id PK,FK
+        text major_code
+        text name
+        int quota
+        bool is_active
+    }
+    admission_methods {
+        text code PK
+        text name
+    }
+    offering_methods {
+        text offering_id PK,FK
+        text method_code PK,FK
+    }
+    offering_subject_groups {
+        text offering_id PK,FK
+        text group_code PK
+    }
+    cutoff_scores {
+        text offering_id PK,FK
+        text method_code PK,FK
+        real score
+        int scale
+        text source_url
+        text program_name_snapshot
+    }
+    documents {
+        text id PK
+        text campus_code FK
+        text created_by FK
+        text checksum UK
+        text status
+        text storage_path
+    }
+    document_chunks {
+        text id PK
+        text document_id FK
+        int chunk_index
+        text content
+    }
+    embedding_models {
+        text id PK
+        text provider
+        text model_name
+        int dimensions
+    }
+    chunk_embeddings {
+        text chunk_id PK,FK
+        text model_id PK,FK
+        text vector
+    }
+    chat_sessions {
+        text id PK
+        text account_id FK
+        text token_hash UK
+    }
+    messages {
+        text id PK
+        text session_id FK
+        text context_campus FK
+        text role
+        text content
+    }
+    message_citations {
+        text message_id PK,FK
+        int citation PK
+        text chunk_id FK
+        text source_snapshot
+    }
+    feedback {
+        text id PK
+        text message_id FK,UK
+        int rating
+    }
+    freshman_guides {
+        text id PK
+        text cohort UK
+        text storage_path
+    }
+    freshman_items {
+        text id PK
+        text guide_id FK
+        text category
+        text code
+    }
+```
+
+ERD lược bớt thuộc tính; DDL là định nghĩa đầy đủ. Khóa duy nhất của đợt tuyển sinh là `(admission_year, campus_code, admission_code)`. `major_catalogue.id` đồng thời là khóa ngoại, nên điểm chuẩn lịch sử có thể tồn tại khi chưa có danh mục chi tiết cho năm đó. `schema_migrations` và `api_rate_limits` là bảng kỹ thuật độc lập, không vẽ trong sơ đồ nghiệp vụ.
+
 ## Yêu cầu và cấu hình
 
 - Python **3.11+**, Node.js **22+**, npm.
@@ -69,6 +211,7 @@ Tạo `backend/.env` từ `backend/.env.example`. Nếu đã có file `.env`, c�
 | `GOOGLE_API_KEY` | Khóa Gemini, chỉ đặt ở backend | Tự cấp |
 | `GEMINI_MODEL` | Model tạo câu trả lời | `gemini-2.5-flash` |
 | `EMBEDDING_MODEL` | Model tạo embedding | `gemini-embedding-001` |
+| `EMBEDDING_DIMENSIONS` | Số chiều vector, phải khớp dữ liệu/model đã chọn | `768` |
 | `FRONTEND_ORIGIN` | Origin được phép gọi API qua CORS | `http://localhost:3000` |
 | `SIMILARITY_THRESHOLD` | Ngưỡng tương đồng tối thiểu khi tìm đoạn nguồn | `0.65` |
 | `RATE_LIMIT_GLOBAL` | Tổng yêu cầu API mỗi phút theo IP | `120` |

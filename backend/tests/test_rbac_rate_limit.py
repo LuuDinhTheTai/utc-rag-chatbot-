@@ -95,7 +95,9 @@ def test_existing_admin_schema_migrates(tmp_path, monkeypatch):
     raw.execute("INSERT INTO admins VALUES ('legacy','legacy@example.com','hashed')")
     raw.commit()
     raw.close()
+    from app.migrations import migrate
+    migrate(tmp_path, apply=True, offline=True)
     with connect() as conn:
-        row = conn.execute("SELECT role,is_active FROM admins WHERE id='legacy'").fetchone()
+        row = conn.execute("SELECT role,is_active FROM accounts WHERE id='legacy'").fetchone()
     assert (row['role'], row['is_active']) == ('admin', 1)
     settings.cache_clear()

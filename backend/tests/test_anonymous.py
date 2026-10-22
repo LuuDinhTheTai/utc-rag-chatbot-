@@ -41,9 +41,9 @@ def test_chat_token_isolates_feedback(client):
     first = client.post('/sessions').json()
     second = client.post('/sessions').json()
     with connect() as conn:
-        conn.execute('INSERT INTO messages(id,session_id,role,content,sources,created_at) VALUES(?,?,?,?,?,?)',
+        conn.execute('INSERT INTO messages(id,session_id,role,content,created_at) VALUES(?,?,?,?,?)',
                      ('00000000-0000-0000-0000-000000000001', first['id'], 'assistant',
-                      'Answer', '[]', '2026-01-01'))
+                      'Answer', '2026-01-01'))
     response = client.post('/feedback', headers={'X-Session-Token': second['token']},
                            json={'message_id': '00000000-0000-0000-0000-000000000001', 'rating': 1})
     assert response.status_code == 404
@@ -68,13 +68,15 @@ def test_existing_account_database_accepts_new_anonymous_sessions(client, tmp_pa
     finally:
         conn.close()
 
+    from app.migrations import migrate
+    migrate(tmp_path, apply=True, offline=True)
     fresh = client.post('/sessions')
     assert fresh.status_code == 200, fresh.text
     with connect() as conn:
-        old = conn.execute('SELECT user_id FROM chat_sessions WHERE id=?',
+        old = conn.execute('SELECT account_id FROM chat_sessions WHERE id=?',
                            ('00000000-0000-0000-0000-000000000002',)).fetchone()
-        new = conn.execute('SELECT user_id FROM chat_sessions WHERE id=?',
+        new = conn.execute('SELECT account_id FROM chat_sessions WHERE id=?',
                            (fresh.json()['id'],)).fetchone()
-    assert old['user_id'] == 'old-user'
-    assert new['user_id'] is None
+    assert old['account_id'] == 'old-user'
+    assert new['account_id'] is None
     assert client.get('/messages', headers={'X-Session-Token': 'legacy-owned-token-hash'}).status_code == 401
