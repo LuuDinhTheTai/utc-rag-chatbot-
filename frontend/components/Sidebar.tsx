@@ -22,12 +22,17 @@ export default function Sidebar() {
     window.dispatchEvent(event);
     if (event.defaultPrevented) return;
     localStorage.removeItem('utc-session');
-    if (pathname !== '/') router.push('/');
+    sessionStorage.removeItem('utc-active-conversation');
+    router.push('/');
   }
 
   const links = [
     {href: '/', label: 'Hỏi đáp tuyển sinh', icon: 'chat' as const},
+    {href: '/conversations', label: 'Lịch sử hội thoại', icon: 'history' as const},
     {href: '/majors', label: 'Ngành học & điểm chuẩn', icon: 'book' as const},
+    {href: '/score-calculator', label: 'Tính điểm xét tuyển', icon: 'calculator' as const},
+    {href: '/preferences', label: 'Nguyện vọng cá nhân', icon: 'list' as const},
+    {href: '/checklist', label: 'Checklist & lịch', icon: 'calendar' as const},
     {href: '/freshmen', label: 'Hồ sơ tân sinh viên', icon: 'file' as const},
   ];
   return <aside className="sidebar" aria-label="Thanh điều hướng">

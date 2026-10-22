@@ -14,6 +14,7 @@ export default function AuthProvider({children}:{children:ReactNode}) {
     sessionStorage.removeItem('utc-auth-token');
     sessionStorage.removeItem('utc-admin-token');
     localStorage.removeItem('utc-session');
+    sessionStorage.removeItem('utc-active-conversation');
     window.dispatchEvent(new Event('utc:account-changed'));
     setToken('');setUser(null);
   }

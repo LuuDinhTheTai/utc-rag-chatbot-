@@ -1,6 +1,7 @@
 'use client';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
+import Link from 'next/link';
 
 export type Major = {
   id: string; admission_code: string; major_code: string; name: string; program_name: string;
@@ -116,7 +117,7 @@ export default function MajorCatalogue({token,readOnly=false,onViewCutoffs}:{tok
         <tbody>{result.items.map(item=><tr key={item.id}>
           <td><button type="button" className="major-compare-pick" aria-pressed={selected.some(chosen=>chosen.id===item.id)} aria-label={`${selected.some(chosen=>chosen.id===item.id)?'Bỏ':'Chọn'} ${item.admission_code} ${item.program_name} để so sánh`} disabled={selected.length===3&&!selected.some(chosen=>chosen.id===item.id)} onClick={()=>toggleCompare(item)}>{selected.some(chosen=>chosen.id===item.id)?'Đã chọn':'Chọn'}</button></td>
           <td className="major-table-code">{item.admission_code}</td>
-          <td className="major-table-name"><strong>{item.name}</strong><span>{item.program_name}</span>{onViewCutoffs&&<button className="major-cutoff-button" type="button" onClick={()=>onViewCutoffs(item)} aria-label={`Xem điểm chuẩn ${item.program_name} ${item.admission_code}`}>Xem điểm chuẩn</button>}</td>
+          <td className="major-table-name"><strong>{item.name}</strong><span>{item.program_name}</span>{!isAdmin&&<Link className="major-cutoff-button" href={`/preferences?offering=${item.id}&year=${item.admission_year}&campus=${item.campus}`}>Lưu nguyện vọng →</Link>}{onViewCutoffs&&<button className="major-cutoff-button" type="button" onClick={()=>onViewCutoffs(item)} aria-label={`Xem điểm chuẩn ${item.program_name} ${item.admission_code}`}>Xem điểm chuẩn</button>}</td>
           <td>{item.major_code}</td>
           <td>{item.admission_year}</td>
           <td>{item.campus==='hanoi'?'Hà Nội':'TP. HCM'}</td>

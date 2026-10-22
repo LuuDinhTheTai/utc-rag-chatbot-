@@ -32,4 +32,4 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 export type Source = {id: string; citation: number; title: string; source_url: string; content: string; admission_year: number; campus: string};
-export type Message = {id: string; role: 'user' | 'assistant'; content: string; question?: string; sources?: Source[]; supported?: boolean; latency_ms?: number; context_year?: number; context_campus?: string};
+export type Message = {id: string; role: 'user' | 'assistant'; content: string; question?: string; sources?: Source[]; supported?: boolean; latency_ms?: number; context_year?: number; context_campus?: string; bookmarked?: boolean; rating?: number | null};

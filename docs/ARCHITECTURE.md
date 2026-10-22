@@ -4,6 +4,8 @@ Database hiện dùng [schema v2](DATABASE-V2.md) và [ERD trong README](../READ
 
 Tài liệu này mô tả mã nguồn hiện tại. Điểm khởi đầu là [README](../README.md), nơi có hướng dẫn cài đặt, cấu hình và vận hành.
 
+Module `conversations.py` bổ sung lịch sử cá nhân, tìm kiếm FTS5 và bookmark; `conversation_schema.py` thực hiện migration/backfill có trigger đồng bộ. Xem [chi tiết](CONVERSATIONS.md).
+
 ## 1. Tổng quan
 
 Ứng dụng có hai tiến trình chính: Next.js phục vụ giao diện và FastAPI cung cấp API. FastAPI sở hữu toàn bộ quy tắc nghiệp vụ, lưu dữ liệu trong SQLite và lưu tệp trên ổ đĩa. Gemini được gọi từ backend để tạo embedding và sinh câu trả lời. Trình duyệt không giữ khóa Gemini và không truy cập trực tiếp SQLite.

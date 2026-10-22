@@ -31,6 +31,14 @@ Không lưu `chunk_count` làm nguồn sự thật; tính COUNT theo document. S
 - `search_text` là dữ liệu dẫn xuất có chủ đích, cần giữ cách chuẩn hóa nhất quán khi import/update (cutoffs dùng `search_key`; catalogue hiện giữ hành vi tìm kiếm có sẵn). B-tree không tăng tốc `LIKE '%từ%'`; chỉ bổ sung FTS sau đo đạc và xác minh cách tìm không dấu.
 - Dùng `EXPLAIN QUERY PLAN` cho SQLite, không dùng `EXPLAIN ANALYZE` hoặc `CREATE INDEX CONCURRENTLY` của PostgreSQL. Đo lại trên bản sao dữ liệu thực trước triển khai.
 
+## Bản bổ sung kế hoạch tuyển sinh
+
+`planner_v1` bổ sung bốn bảng theo [DDL planner](../backend/schema/planner.sql) sau schema v2. Runtime thực hiện một lần trong transaction, giữ dữ liệu v2. Xem [tính năng và API](PLANNER.md); ERD README đã gồm các bảng mới.
+
+## Bản bổ sung lịch sử hội thoại
+
+`conversations_v1` bổ sung metadata, bookmark và hai chỉ mục FTS5 sau schema v2/planner; backfill dữ liệu cũ trong cùng transaction. Xem [DDL](../backend/schema/conversations.sql) và [hướng dẫn lịch sử](CONVERSATIONS.md).
+
 ## Chạy migration
 
 Chạy từ `backend`, dùng đúng DATA_DIR của dịch vụ. Dừng backend, indexer và mọi tiến trình có thể ghi SQLite hoặc files trước khi áp dụng/rollback. Frontend có thể giữ nguyên; API tạm ngừng trong khoảng chuyển đổi.

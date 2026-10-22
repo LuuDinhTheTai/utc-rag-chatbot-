@@ -13,6 +13,7 @@ Tài liệu phân tích từng module, luồng xử lý và cấu trúc lưu tr�
 - [Chạy trên Windows](#chạy-trên-windows)
 - [Chạy trên Linux hoặc macOS](#chạy-trên-linux-hoặc-macos)
 - [Sử dụng ứng dụng](#sử-dụng-ứng-dụng)
+- [Kế hoạch tuyển sinh cá nhân](#kế-hoạch-tuyển-sinh-cá-nhân)
 - [Công cụ nhập dữ liệu](#công-cụ-nhập-dữ-liệu)
 - [Bộ đánh giá RAG](#bộ-đánh-giá-rag)
 - [API chính](#api-chính)
@@ -21,6 +22,10 @@ Tài liệu phân tích từng module, luồng xử lý và cấu trúc lưu tr�
 - [Kiểm thử và xử lý lỗi](#kiểm-thử-và-xử-lý-lỗi)
 
 ## Chức năng
+
+- **Lưu & tìm lại hội thoại:** `/conversations` tự lưu hội thoại theo tài khoản, đặt tên, tìm tiêu đề/nội dung không dấu và đánh dấu câu trả lời quan trọng. Mở đúng tin nhắn trong hội thoại dài, giữ nguồn trích dẫn và tiếp tục trò chuyện. [Hướng dẫn và phân quyền](docs/CONVERSATIONS.md).
+
+- **Kế hoạch tuyển sinh:** `/score-calculator` tính điểm ba môn tham khảo, `/preferences` lưu/sắp xếp nguyện vọng và đối chiếu điểm chuẩn, `/checklist` quản lý công việc cùng lịch `.ics`. Ba tính năng có mục riêng trên thanh bên. Nguyện vọng/checklist cần đăng nhập; dữ liệu lưu riêng theo tài khoản. [Cách dùng và phạm vi tính điểm](docs/PLANNER.md).
 
 - **Ngành học & điểm chuẩn:** trang `/majors` gộp danh mục, so sánh ngành và điểm chuẩn các năm. Bấm **Xem điểm chuẩn** tại một chương trình để lọc chính xác theo mã xét tuyển và cơ sở; có thể trở lại danh mục mà vẫn giữ bộ lọc và lựa chọn so sánh. `/cutoffs` chuyển tới `/majors?view=cutoffs`.
 
@@ -34,7 +39,7 @@ Khi có lịch sử, mỗi câu hỏi có thêm một lượt gọi Gemini để
 - **Danh mục ngành học:** xem, tìm kiếm, lọc, phân trang; chọn 2–3 chương trình (kể cả ở các trang hoặc bộ lọc khác nhau) để so sánh mã xét tuyển, mã ngành, năm, cơ sở, tổ hợp, phương thức và chỉ tiêu trên cùng một bảng; quản trị viên có thể thêm, sửa, ẩn/hiện, xóa hoặc nhập từ JSON.
 - **Hướng dẫn tân sinh viên:** xem hướng dẫn theo khóa, mở PDF gốc; quản trị viên quản lý PDF và từng mục hồ sơ/minh chứng ưu tiên.
 
-Các trang chính: `/` (chat), `/majors` (ngành học), `/freshmen` (tân sinh viên), `/admin` (quản trị). Tài liệu API tự sinh ở `/docs` trên backend.
+Các trang chính: `/` (chat), `/conversations` (lịch sử và câu trả lời đã lưu), `/majors` (ngành học), `/freshmen` (tân sinh viên), `/admin` (quản trị). Tài liệu API tự sinh ở `/docs` trên backend.
 
 ## Kiến trúc và luồng dữ liệu
 
@@ -60,6 +65,13 @@ Database v2 tiếp tục dùng **SQLite**, chuẩn hóa quan hệ tuyển sinh, 
 ```mermaid
 erDiagram
     accounts ||--o{ auth_sessions : authenticates
+    accounts ||--o| planner_revisions : versions
+    accounts ||--o{ planner_preferences : plans
+    accounts ||--o{ planner_tasks : tracks
+    accounts o|--o{ admission_score_rules : publishes
+    admission_offerings o|--o{ planner_preferences : snapshots
+    campuses ||--o{ planner_preferences : scopes
+    campuses ||--o{ admission_score_rules : applies
     accounts o|--o{ chat_sessions : owns
     accounts o|--o{ documents : creates
     campuses ||--o{ admission_offerings : hosts
@@ -75,11 +87,58 @@ erDiagram
     document_chunks ||--o{ chunk_embeddings : embeds
     embedding_models ||--o{ chunk_embeddings : produces
     chat_sessions ||--o{ messages : contains
+    chat_sessions ||--|| conversation_metadata : describes
+    accounts ||--o{ conversation_bookmarks : saves
+    messages ||--o| conversation_bookmarks : bookmarks
     messages ||--o{ message_citations : cites
     document_chunks o|--o{ message_citations : references
     messages ||--o| feedback : receives
     freshman_guides ||--o{ freshman_items : contains
 
+    conversation_metadata {
+        text session_id PK,FK
+        text title
+        bool is_title_custom
+        text updated_at
+    }
+    conversation_bookmarks {
+        text message_id PK,FK
+        text account_id FK
+        text created_at
+    }
+    planner_revisions {
+        text account_id PK,FK
+        int revision
+    }
+    planner_preferences {
+        text id PK
+        text account_id FK
+        text offering_id FK
+        int admission_year
+        text campus FK
+        int position
+        text method
+        real estimated_score
+        int score_scale
+    }
+    planner_tasks {
+        text id PK
+        text account_id FK
+        int admission_year
+        text due_date
+        bool completed
+        text template_key
+    }
+    admission_score_rules {
+        text id PK
+        text published_by FK
+        text campus FK
+        int admission_year
+        text subject_group
+        text priority_mode
+        text source_url
+        bool is_active
+    }
     accounts {
         text id PK
         text email UK
@@ -293,9 +352,13 @@ Giới hạn hiện tại: tệp tối đa **10 MB**, PDF tối đa **300 trang*
 
 Một tài liệu chỉ được lập chỉ mục một lần cho cùng năm, cơ sở và nội dung. Chỉ các tài liệu có trạng thái `ready` tham gia tìm kiếm. Admin có thể chuyển giữa `ready` và `inactive`.
 
+### Lưu và tìm lại hội thoại
+
+Đăng nhập để các cuộc trò chuyện mới được lưu vào tài khoản. Mở **Lịch sử hội thoại** trên sidebar để đổi tên, tìm không dấu theo tiêu đề/nội dung và mở lại đúng tin nhắn. Bấm **Lưu câu trả lời** trong chat để giữ thông tin quan trọng. Có thể tiếp tục hội thoại trên thiết bị khác sau khi đăng nhập. Khách giữ phiên hiện tại trên trình duyệt; không tự gắn phiên khách khi đăng nhập. Xem [hướng dẫn đầy đủ](docs/CONVERSATIONS.md).
+
 ### Hỏi đáp và phản hồi
 
-Chọn năm/cơ sở trên trang chủ rồi gửi câu hỏi, không cần đăng ký hoặc đăng nhập. Nếu câu hỏi nêu rõ một năm hoặc cơ sở, backend ưu tiên thông tin trong câu hỏi; câu hỏi trộn nhiều năm hoặc cả hai cơ sở sẽ bị yêu cầu tách riêng. Khi gửi câu hỏi đầu tiên, backend tạo một token phiên chat ngẫu nhiên; trình duyệt lưu token này trong `localStorage` để xem lại lịch sử trên cùng trình duyệt. Nút **Cuộc trò chuyện mới** bỏ token hiện tại và tạo phiên mới ở lần gửi tiếp theo. Đánh giá hữu ích/chưa hữu ích chỉ ghi cho câu trả lời của đúng phiên. Token phiên là bí mật truy cập lịch sử: ai có token có thể xem hội thoại đó, nên tránh chia sẻ hoặc nhập trên thiết bị công cộng.
+Chọn năm/cơ sở trên trang chủ rồi gửi câu hỏi, không cần đăng ký hoặc đăng nhập. Nếu câu hỏi nêu rõ một năm hoặc cơ sở, backend ưu tiên thông tin trong câu hỏi; câu hỏi trộn nhiều năm hoặc cả hai cơ sở sẽ bị yêu cầu tách riêng. Khi gửi câu hỏi đầu tiên, backend tạo một token phiên chat ngẫu nhiên; trình duyệt lưu token này trong `localStorage` để xem lại lịch sử trên cùng trình duyệt. Nút **Cuộc trò chuyện mới** bỏ token hiện tại và tạo phiên mới ở lần gửi tiếp theo. Đánh giá hữu ích/chưa hữu ích chỉ ghi cho câu trả lời của đúng phiên. Với hội thoại đã đăng nhập, có thể mở lại bằng tài khoản từ Lịch sử; không cần giữ token phiên gốc. Token phiên khách là bí mật truy cập lịch sử: ai có token có thể xem hội thoại đó, nên tránh chia sẻ hoặc nhập trên thiết bị công cộng.
 
 ### Quản lý ngành học và hướng dẫn tân sinh viên
 
@@ -310,6 +373,14 @@ Chạy từ `backend`:
 ```
 
 Trên Linux/macOS, thay bằng `.venv/bin/python scripts/set_admin_password.py`. Script hỏi email và mật khẩu mới, yêu cầu ít nhất 16 ký tự, rồi thu hồi mọi phiên quản trị đang tồn tại.
+
+## Kế hoạch tuyển sinh cá nhân
+
+Mở **Tính điểm xét tuyển** (`/score-calculator`), **Nguyện vọng cá nhân** (`/preferences`) hoặc **Checklist & lịch** (`/checklist`) từ thanh bên. Tính điểm ba môn, ưu tiên đã điều chỉnh và điểm cộng trong chế độ tham khảo; quản trị viên có thể đăng công thức đã đối chiếu nguồn cho đúng năm/cơ sở. Chưa có công thức chính thức được gieo sẵn, nên chế độ tự tính không xác nhận điểm xét tuyển chính thức.
+
+Đăng nhập để tìm/lưu ngành, đổi thứ tự nguyện vọng, lưu điểm dự kiến và ghi chú. Tạo checklist gợi ý hoặc thêm việc riêng, đặt ngày, đánh dấu hoàn thành và tải lịch `.ics`. Ngày do bạn đặt; công cụ không tự đăng ký nguyện vọng hoặc gửi thông báo. Xem [hướng dẫn đầy đủ, công thức và API](docs/PLANNER.md).
+
+Sau migration v2, bản cập nhật tự thêm các bảng planner trong transaction khi kết nối database; giữ nguyên dữ liệu hiện có. DDL bổ sung: [`backend/schema/planner.sql`](backend/schema/planner.sql).
 
 ## Công cụ nhập dữ liệu
 
@@ -446,6 +517,7 @@ Lệnh đầu kiểm tra dữ liệu, lệnh `--apply` thêm bản ghi vào `DAT
 | Nhóm | Endpoint | Công dụng |
 | --- | --- | --- |
 | Hệ thống | `GET /health` | Trạng thái và cờ cấu hình |
+| Lịch sử riêng | `/conversations`, `/conversations/{id}/messages`, `/conversations/bookmarks` | Tìm/đổi tên/mở lại hội thoại và lưu câu trả lời; yêu cầu đăng nhập |
 | Chat | `POST /sessions`, `GET /messages`, `POST /chat`, `POST /feedback` | Tạo phiên ẩn danh, lịch sử, hỏi đáp, đánh giá |
 | Quản trị | `POST /admin/login`, `POST /admin/logout` | Đăng nhập, đăng xuất |
 | Tài liệu | `GET/POST /admin/documents`, `POST /admin/documents/preview`, `POST /admin/documents/upload` | Danh sách, thêm và xem trước |

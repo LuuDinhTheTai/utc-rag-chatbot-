@@ -34,6 +34,10 @@ def connect():
         conn.execute('PRAGMA foreign_keys=ON')
         if not is_v2(conn):
             initialize(conn)  # Empty databases only; legacy migration must be explicit/offline.
+        from .planner_schema import ensure_planner
+        ensure_planner(conn)
+        from .conversation_schema import ensure_conversations
+        ensure_conversations(conn)
         conn.execute('PRAGMA journal_mode=WAL')
         return conn
     except Exception:

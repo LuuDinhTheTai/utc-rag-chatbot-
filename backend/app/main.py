@@ -35,7 +35,18 @@ def db():
 
 
 
-def session(x_session_token: str = Header(default=''), account=Depends(optional_account)):
+def session(x_session_token: str = Header(default=''), x_conversation_id: str = Header(default=''), account=Depends(optional_account)):
+    if x_conversation_id:
+        if not account:
+            raise HTTPException(401, 'Vui lòng đăng nhập để mở hội thoại đã lưu.')
+        try:
+            identifier = str(UUID(x_conversation_id))
+        except ValueError as exc:
+            raise HTTPException(422, 'Mã hội thoại không hợp lệ.') from exc
+        with connect() as conn:
+            if not conn.execute('SELECT 1 FROM chat_sessions WHERE id=? AND account_id=?', (identifier, account['id'])).fetchone():
+                raise HTTPException(404, 'Không tìm thấy cuộc trò chuyện.')
+        return identifier
     if not 32 <= len(x_session_token) <= 200:
         raise HTTPException(401, 'Phiên trò chuyện không hợp lệ.')
     rows = db().table('chat_sessions').select('id,account_id').eq(
@@ -333,5 +344,11 @@ app.include_router(make_freshmen_router(db, admin, can_edit))
 from .cutoffs import router as cutoff_router
 app.include_router(cutoff_router)
 
+from .conversations import router as conversation_router
+app.include_router(conversation_router)
+
+from .planner import router as planner_router
+app.include_router(planner_router)
+
 app.middleware('http')(rate_limit_middleware)
-app.add_middleware(CORSMiddleware, allow_origins=[settings().frontend_origin], allow_methods=['GET', 'POST', 'PATCH', 'DELETE'], allow_headers=['Content-Type', 'Authorization', 'X-Session-Token'], expose_headers=['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'])
+app.add_middleware(CORSMiddleware, allow_origins=[settings().frontend_origin], allow_methods=['GET', 'POST', 'PATCH', 'DELETE'], allow_headers=['Content-Type', 'Authorization', 'X-Session-Token', 'X-Conversation-Id'], expose_headers=['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'])
