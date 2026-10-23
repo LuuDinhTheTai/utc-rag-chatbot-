@@ -37,9 +37,10 @@ Khi có lịch sử, mỗi câu hỏi có thêm một lượt gọi Gemini để
 - **Hỏi đáp tuyển sinh:** lọc theo năm và cơ sở Hà Nội/TP. Hồ Chí Minh; hiển thị trích dẫn, liên kết nguồn, lịch sử hội thoại và đánh giá câu trả lời.
 - **Kho tài liệu:** quản trị viên xem trước nội dung từ URL hoặc tệp, xác nhận lập chỉ mục, tải lại tệp gốc, tạm ẩn, thử lại khi lập chỉ mục lỗi và xóa tài liệu.
 - **Danh mục ngành học:** xem, tìm kiếm, lọc, phân trang; chọn 2–3 chương trình (kể cả ở các trang hoặc bộ lọc khác nhau) để so sánh mã xét tuyển, mã ngành, năm, cơ sở, tổ hợp, phương thức và chỉ tiêu trên cùng một bảng; quản trị viên có thể thêm, sửa, ẩn/hiện, xóa hoặc nhập từ JSON.
-- **Hướng dẫn tân sinh viên:** xem hướng dẫn theo khóa, mở PDF gốc; quản trị viên quản lý PDF và từng mục hồ sơ/minh chứng ưu tiên.
 
-Các trang chính: `/` (chat), `/conversations` (lịch sử và câu trả lời đã lưu), `/majors` (ngành học), `/freshmen` (tân sinh viên), `/admin` (quản trị). Tài liệu API tự sinh ở `/docs` trên backend.
+Các trang chính: `/` (chat), `/conversations` (lịch sử và câu trả lời đã lưu), `/majors` (ngành học), `/admin` (quản trị). Tài liệu API tự sinh ở `/docs` trên backend.
+
+Các bảng và PDF của tính năng hướng dẫn tân sinh viên cũ được giữ trong database/kho tệp để bảo toàn dữ liệu hiện có; ứng dụng không còn trang hay API truy cập tính năng này.
 
 ## Kiến trúc và luồng dữ liệu
 
@@ -360,9 +361,9 @@ Một tài liệu chỉ được lập chỉ mục một lần cho cùng năm, c
 
 Chọn năm/cơ sở trên trang chủ rồi gửi câu hỏi, không cần đăng ký hoặc đăng nhập. Nếu câu hỏi nêu rõ một năm hoặc cơ sở, backend ưu tiên thông tin trong câu hỏi; câu hỏi trộn nhiều năm hoặc cả hai cơ sở sẽ bị yêu cầu tách riêng. Khi gửi câu hỏi đầu tiên, backend tạo một token phiên chat ngẫu nhiên; trình duyệt lưu token này trong `localStorage` để xem lại lịch sử trên cùng trình duyệt. Nút **Cuộc trò chuyện mới** bỏ token hiện tại và tạo phiên mới ở lần gửi tiếp theo. Đánh giá hữu ích/chưa hữu ích chỉ ghi cho câu trả lời của đúng phiên. Với hội thoại đã đăng nhập, có thể mở lại bằng tài khoản từ Lịch sử; không cần giữ token phiên gốc. Token phiên khách là bí mật truy cập lịch sử: ai có token có thể xem hội thoại đó, nên tránh chia sẻ hoặc nhập trên thiết bị công cộng.
 
-### Quản lý ngành học và hướng dẫn tân sinh viên
+### Quản lý ngành học
 
-Tại `/admin`, dùng tab **Ngành học** để quản lý danh mục hoặc nhập JSON. Dùng tab **Tân sinh viên** để tạo khóa (ví dụ `K67`) với PDF, công bố/ẩn hướng dẫn và quản lý từng mục hồ sơ. Danh mục ngành học **không tự trở thành nguồn RAG**; muốn chatbot dùng dữ liệu mới, hãy nạp tài liệu nguồn tương ứng vào kho tài liệu.
+Tại `/admin`, dùng tab **Ngành học** để quản lý danh mục hoặc nhập JSON. Danh mục ngành học **không tự trở thành nguồn RAG**; muốn chatbot dùng dữ liệu mới, hãy nạp tài liệu nguồn tương ứng vào kho tài liệu.
 
 ### Đổi mật khẩu quản trị
 
@@ -403,15 +404,6 @@ Lệnh đầu chỉ kiểm tra; `--apply` mới ghi SQLite. Tệp là dữ liệ
 ```
 
 Dữ liệu đã có cùng năm, cơ sở và mã xét tuyển được bỏ qua; các sửa đổi của admin được giữ lại.
-
-**Hướng dẫn K67** từ PDF và dữ liệu đã có tại `backend/data/freshmen_k67.json`:
-
-```powershell
-.venv\Scripts\python scripts/import_freshmen.py "duong-dan\huong-dan-K67.pdf"
-.venv\Scripts\python scripts/import_freshmen.py "duong-dan\huong-dan-K67.pdf" --apply
-```
-
-Script kiểm tra PDF, số trang tham chiếu và các mục dữ liệu trước khi nhập. Script này hiện dành riêng cho dữ liệu K67 được lưu trong repository.
 
 ## Bộ đánh giá RAG
 
@@ -525,7 +517,6 @@ Lệnh đầu kiểm tra dữ liệu, lệnh `--apply` thêm bản ghi vào `DAT
 | Rà soát | `GET /admin/review` | Phản hồi và câu trả lời thiếu nguồn |
 | Điểm chuẩn | `GET /cutoffs`, `GET /cutoffs/options` | Tra cứu lịch sử điểm trúng tuyển và bộ lọc |
 | Ngành học | `GET /majors`, `GET /majors/{id}`, `/admin/majors/*` | Tra cứu và quản trị |
-| Tân sinh viên | `GET /freshmen`, `GET /freshmen/{cohort}`, `GET /freshmen/{cohort}/pdf`, `/admin/freshmen/*` | Hướng dẫn và quản trị |
 
 Các endpoint `/admin/*` cần `Authorization: Bearer <token>` của quản trị viên, ngoại trừ `/admin/login`. `POST /sessions` không cần xác thực và trả token phiên. `GET /messages`, `POST /chat` và `POST /feedback` cần header `X-Session-Token` lấy từ phiên đó; đây là token riêng cho lịch sử chat, không cấp quyền quản trị. Xem schema yêu cầu/phản hồi đầy đủ tại `/docs`.
 
@@ -540,7 +531,7 @@ Các endpoint `/admin/*` cần `Authorization: Bearer <token>` của quản tr�
 
 ## Dữ liệu từ Supabase cũ
 
-Phiên bản này **không tự sao chép dữ liệu cũ**. SQLite mới bắt đầu trống. Trước khi chuyển lưu lượng thật, hãy xuất và đối chiếu tài liệu cùng embedding, tệp gốc, danh mục ngành, hướng dẫn tân sinh viên/PDF và các mục liên quan từ dự án cũ. Tài khoản Supabase Auth không chuyển sang hệ thống mới; hãy tạo tài khoản quản trị cục bộ. Các file SQL trong `supabase/` chỉ còn là tham chiếu cho cấu trúc cũ và không chạy khi khởi động.
+Phiên bản này **không tự sao chép dữ liệu cũ**. SQLite mới bắt đầu trống. Trước khi chuyển lưu lượng thật, hãy xuất và đối chiếu tài liệu cùng embedding, tệp gốc và danh mục ngành từ dự án cũ. Tài khoản Supabase Auth không chuyển sang hệ thống mới; hãy tạo tài khoản quản trị cục bộ. Các file SQL trong `supabase/` chỉ còn là tham chiếu cho cấu trúc cũ và không chạy khi khởi động.
 
 ## Kiểm thử và xử lý lỗi
 

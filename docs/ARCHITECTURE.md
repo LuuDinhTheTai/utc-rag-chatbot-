@@ -12,7 +12,7 @@ Module `conversations.py` bổ sung lịch sử cá nhân, tìm kiếm FTS5 và 
 
 | Thành phần | Trách nhiệm | Trạng thái/dữ liệu |
 | --- | --- | --- |
-| Frontend Next.js | Chat công khai, tra cứu ngành, hướng dẫn tân sinh viên, quản trị | Token phiên chat ẩn danh trong localStorage; token quản trị trong sessionStorage; trạng thái màn hình trong React |
+| Frontend Next.js | Chat công khai, tra cứu ngành, quản trị | Token phiên chat ẩn danh trong localStorage; token quản trị trong sessionStorage; trạng thái màn hình trong React |
 | FastAPI | Xác thực, kiểm tra đầu vào, điều phối RAG và các nghiệp vụ | Bộ giới hạn tần suất trong bộ nhớ tiến trình |
 | SQLite | Tài khoản, phiên, hội thoại, tài liệu, đoạn và vector, ngành, hướng dẫn, phản hồi | DATA_DIR/utc.sqlite3 |
 | Kho tệp cục bộ | Tệp nguồn đã tải lên và PDF hướng dẫn | DATA_DIR/files/ |
@@ -37,7 +37,7 @@ flowchart LR
 4. Nếu có đoạn phù hợp, backend gọi Gemini để tạo câu trả lời có dẫn nguồn; nếu không, trả lời thiếu căn cứ.
 5. Câu hỏi, câu trả lời và phản hồi của người dùng được lưu theo phiên chat.
 
-Danh mục ngành và hướng dẫn tân sinh viên là hai luồng dữ liệu cấu trúc riêng. Việc sửa các bản ghi này không tự cập nhật kho đoạn RAG.
+Danh mục ngành là luồng dữ liệu cấu trúc riêng. Việc sửa các bản ghi này không tự cập nhật kho đoạn RAG.
 
 ## 2. Cấu trúc mã nguồn
 
@@ -49,7 +49,6 @@ Danh mục ngành và hướng dẫn tân sinh viên là hai luồng dữ liệu
 | [backend/app/rag.py](../backend/app/rag.py) | Trích xuất nguồn, lọc câu hỏi, embedding, truy xuất và sinh câu trả lời |
 | [backend/app/localdb.py](../backend/app/localdb.py) | SQLite, kho tệp cục bộ, truy vấn và các RPC nghiệp vụ |
 | [backend/app/majors.py](../backend/app/majors.py) | API và kiểm tra dữ liệu danh mục ngành |
-| [backend/app/freshmen.py](../backend/app/freshmen.py) | API hướng dẫn tân sinh viên và PDF |
 | [backend/app/evaluation.py](../backend/app/evaluation.py) | Chạy bộ câu hỏi đánh giá RAG và tính chỉ số |
 | [backend/scripts/](../backend/scripts/) | Lệnh nhập dữ liệu, đổi mật khẩu, đánh giá RAG |
 | [backend/tests/](../backend/tests/) | Kiểm thử API, dữ liệu cục bộ và đánh giá |
@@ -146,11 +145,7 @@ Module định nghĩa MajorInput và các quy tắc kiểm tra mã, chỉ tiêu,
 
 parse_catalogue() đọc cấu trúc JSON theo các phần chỉ tiêu từng năm và cơ sở GHA/GSA, chuẩn hóa thành các bản ghi, phát hiện mã trùng và giới hạn số bản ghi nhập. Dữ liệu được lưu tại major_catalogue; tìm kiếm dùng trường search_text trong SQLite. Đây là danh mục cấu trúc riêng, không đi qua tạo embedding.
 
-### 3.6. Hướng dẫn tân sinh viên: app/freshmen.py
-
-Module quản lý guide theo khóa dạng K + chữ số và các item thuộc từng guide. Route công khai trả guide đã xuất bản và item đang hoạt động; route quản trị cho phép xem bản nháp, tạo/sửa/xóa guide và item, tải PDF lên. PDF được kiểm tra chữ ký %PDF-, giới hạn 10 MB và lưu dưới DATA_DIR/files/freshmen/<khóa>/ với tên ngẫu nhiên. Trang nguồn của item giúp frontend mở đúng trang PDF. PDF của guide đã xuất bản được đọc công khai; PDF bản nháp cần token quản trị. Khi xóa guide, item liên quan được xóa theo quan hệ dữ liệu và tệp PDF được dọn khỏi kho.
-
-### 3.7. Bộ đánh giá RAG: app/evaluation.py
+### 3.6. Bộ đánh giá RAG: app/evaluation.py
 
 Bộ dữ liệu JSON phiên bản 1 gồm các ca với ID, câu hỏi, bộ lọc năm/cơ sở và kỳ vọng: có/không đủ nguồn, URL nguồn, câu trả lời tham chiếu và các cụm từ bắt buộc. load_dataset() kiểm tra schema và ID duy nhất; dataset_hash() gắn báo cáo với đúng nội dung bộ câu hỏi.
 
@@ -170,16 +165,14 @@ Trang client giữ danh sách message, câu hỏi, năm/cơ sở và trạng th�
 
 ### 4.3. Trang quản trị: frontend/app/admin/page.tsx
 
-Trang client đăng nhập qua POST /admin/login, giữ token trong sessionStorage và gắn Authorization: Bearer cho các request quản trị. Nó điều khiển các tab tài liệu, rà soát, ngành và tân sinh viên. Với tài liệu, giao diện cho xem trước tệp/URL, xác nhận metadata, tải lên, xem trạng thái, tải tệp gốc, ẩn/hiện, thử lại hoặc xóa. Trang tải lại danh sách tài liệu và rà soát định kỳ 10 giây để thấy kết quả lập chỉ mục chạy nền. Khi đăng xuất, nó gọi POST /admin/logout và xóa token cục bộ.
+Trang client đăng nhập qua POST /admin/login, giữ token trong sessionStorage và gắn Authorization: Bearer cho các request quản trị. Nó điều khiển các tab tài liệu, rà soát và ngành. Với tài liệu, giao diện cho xem trước tệp/URL, xác nhận metadata, tải lên, xem trạng thái, tải tệp gốc, ẩn/hiện, thử lại hoặc xóa. Trang tải lại danh sách tài liệu và rà soát định kỳ 10 giây để thấy kết quả lập chỉ mục chạy nền. Khi đăng xuất, nó gọi POST /admin/logout và xóa token cục bộ.
 
 ### 4.4. Thành phần nghiệp vụ và các trang
 
 | Module | Vai trò |
 | --- | --- |
 | [MajorCatalogue.tsx](../frontend/components/MajorCatalogue.tsx) | Tìm/lọc/phân trang ngành; khi được truyền token quản trị thì hiện thêm CRUD và nhập JSON |
-| [FreshmanGuide.tsx](../frontend/components/FreshmanGuide.tsx) | Chọn khóa, xem các mục và PDF; ở chế độ quản trị có thêm thao tác guide/item và tải PDF qua token |
 | [app/majors/page.tsx](../frontend/app/majors/page.tsx) | Gắn MajorCatalogue ở chế độ công khai |
-| [app/freshmen/page.tsx](../frontend/app/freshmen/page.tsx) | Gắn FreshmanGuide ở chế độ công khai |
 | [app/layout.tsx](../frontend/app/layout.tsx) | Bố cục gốc, metadata, ngôn ngữ tiếng Việt |
 | [app/globals.css](../frontend/app/globals.css) | Kiểu dáng dùng chung |
 
@@ -190,11 +183,10 @@ Các trang công khai và quản trị dùng lại cùng thành phần, nhưng q
 | Module | Cách hoạt động |
 | --- | --- |
 | [scripts/import_majors.py](../backend/scripts/import_majors.py) | Đọc JSON danh mục, kiểm tra định dạng; chỉ ghi SQLite khi có --apply, bỏ qua ngành đã tồn tại |
-| [scripts/import_freshmen.py](../backend/scripts/import_freshmen.py) | Đọc dữ liệu K67 và PDF trong backend/data, kiểm tra số trang; chỉ ghi khi có --apply |
 | [scripts/set_admin_password.py](../backend/scripts/set_admin_password.py) | Nhập email/mật khẩu mới, cập nhật hash và hủy các phiên admin cũ |
 | [scripts/evaluate_rag.py](../backend/scripts/evaluate_rag.py) | CLI chạy bộ câu hỏi, tùy chọn retrieval-only, baseline, đường dẫn báo cáo và ngưỡng fail |
 | [evaluations/dataset.example.json](../backend/evaluations/dataset.example.json) | Mẫu bộ câu hỏi; cần thay câu hỏi và URL nguồn đúng với dữ liệu đã nạp |
-| [tests/](../backend/tests/) | Kiểm thử FastAPI, quy tắc ngành, hướng dẫn, SQLite cục bộ và phép tính đánh giá |
+| [tests/](../backend/tests/) | Kiểm thử FastAPI, quy tắc ngành, SQLite cục bộ và phép tính đánh giá |
 
 requirements.in liệt kê phụ thuộc trực tiếp của backend; requirements.txt là tập phiên bản đã khóa. Tệp .env.example trong từng phần mô tả cấu hình mẫu; tuyệt đối không đưa khóa thật vào frontend.
 

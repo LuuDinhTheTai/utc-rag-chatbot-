@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture
 def target():
     conn = sqlite3.connect(':memory:')
-    conn.executescript((Path(__file__).resolve().parents[1] / 'schema/v2.sql').read_text())
+    conn.executescript((Path(__file__).resolve().parents[1] / 'schema/v2.sql').read_text(encoding='utf-8'))
     yield conn
     conn.close()
 

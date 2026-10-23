@@ -283,7 +283,7 @@ TEMPLATES = [
     ('evidence','Chuẩn bị minh chứng và hồ sơ','Đối chiếu hướng dẫn chính thức; kiểm tra giấy tờ ưu tiên nếu có.'),
     ('preferences','Rà soát thứ tự nguyện vọng','Sắp xếp theo mong muốn học thực tế và kiểm tra mã xét tuyển.'),
     ('confirm','Theo dõi kết quả và xác nhận nhập học','Tự đặt hạn theo thông báo chính thức khi được công bố.'),
-    ('enrol','Chuẩn bị hồ sơ nhập học','Xem trang Hồ sơ tân sinh viên và thông báo dành cho khóa của bạn.'),
+    ('enrol','Chuẩn bị hồ sơ nhập học','Đối chiếu thông báo nhập học chính thức dành cho khóa của bạn.'),
 ]
 
 

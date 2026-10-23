@@ -68,20 +68,6 @@ def test_major_and_freshman_crud(self_hosted):
     assert client.delete(f'/admin/majors/{major_id}', headers=headers).status_code == 200
     assert client.get('/majors').json()['total'] == 0
 
-    pdf = b'%PDF-1.4\n1 0 obj <<>> endobj\n%%EOF'
-    response = client.post('/admin/freshmen', headers=headers,
-        data={'cohort': 'K67', 'title': 'Freshman guide', 'admission_year': 2026},
-        files={'file': ('guide.pdf', pdf, 'application/pdf')})
-    assert response.status_code == 201, response.text
-    assert client.get('/freshmen/K67/pdf').content == pdf
-    item = {'code': 'HS1', 'category': 'document', 'title': 'Identity document',
-            'source_page': 1}
-    assert client.post('/admin/freshmen/K67/items', headers=headers, json=item).status_code == 201
-    assert len(client.get('/freshmen/K67').json()['items']) == 1
-    assert client.delete('/admin/freshmen/K67', headers=headers).status_code == 200
-    assert client.get('/freshmen/K67').status_code == 404
-
-
 def test_local_rag_and_feedback(self_hosted, monkeypatch):
     client, headers, _ = self_hosted
 

@@ -45,9 +45,6 @@ def test_rbac_and_session_revocation(client):
     assert client.get('/admin/accounts', headers=viewer_headers).status_code == 403
     assert client.post('/admin/documents/preview', headers=viewer_headers).status_code == 403
     assert client.post('/admin/majors', headers=viewer_headers, json={}).status_code == 403
-    assert client.post('/admin/freshmen', headers=viewer_headers,
-        data={'cohort': 'K67', 'title': 'Guide', 'admission_year': 2026},
-        files={'file': ('guide.pdf', b'%PDF-1.4\n%%EOF', 'application/pdf')}).status_code == 403
     assert client.get('/admin/accounts', headers=editor_headers).status_code == 403
     assert client.post('/admin/majors', headers=editor_headers, json={}).status_code == 422
     assert client.patch('/admin/accounts/' + viewer.json()['id'], headers=root,

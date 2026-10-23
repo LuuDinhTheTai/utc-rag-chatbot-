@@ -23,6 +23,12 @@ def test_admin_requires_login(client):
 def test_history_requires_session(client):
     assert client.get('/messages').status_code == 401
 
+
+def test_freshmen_feature_routes_are_removed(client):
+    assert client.get('/freshmen').status_code == 404
+    assert client.get('/admin/freshmen').status_code == 404
+    assert not any(path.startswith(('/freshmen', '/admin/freshmen')) for path in client.get('/openapi.json').json()['paths'])
+
 def test_invalid_admin_token_is_rejected(client):
     assert client.get('/admin/documents', headers={'Authorization': 'Bearer test'}).status_code == 401
 

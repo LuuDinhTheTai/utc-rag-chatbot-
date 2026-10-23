@@ -28,7 +28,7 @@ def initialize(conn):
         if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table'").fetchone():
             raise RuntimeError('Legacy database: stop services and run scripts/migrate_database.py --apply --offline')
         statement = ''
-        for line in DDL.read_text().splitlines(True):
+        for line in DDL.read_text(encoding='utf-8').splitlines(True):
             statement += line
             if sqlite3.complete_statement(statement):
                 # Execute separately to keep DDL + marker atomic (executescript commits).
@@ -247,7 +247,7 @@ def rollback(data_dir, backup, *, offline=False):
     if not offline:
         raise ValueError('Stop services and pass --offline before rollback')
     data_dir,backup = Path(data_dir).resolve(),Path(backup).resolve()
-    metadata = json.loads((backup/'migration.json').read_text())
+    metadata = json.loads((backup/'migration.json').read_text(encoding='utf-8'))
     with closing(open_db(data_dir/'utc.sqlite3')) as current:
         if digest(current) != metadata['v2_digest'] or manifest(data_dir/'files') != metadata['files']:
             raise ValueError('Database/files changed after migration; rollback would lose new data')

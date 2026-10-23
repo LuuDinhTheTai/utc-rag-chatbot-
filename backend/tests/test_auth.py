@@ -1,5 +1,6 @@
 import hashlib
 import sqlite3
+from contextlib import closing
 
 import pytest
 from fastapi.testclient import TestClient
@@ -56,7 +57,7 @@ def test_registration_cannot_escalate_and_normalizes_email(client):
 
 def test_guest_public_access_and_bound_chat_ownership(client):
     assert client.get('/auth/me').json()['role'] == 'guest'
-    for path in ['/majors', '/cutoffs', '/freshmen']:
+    for path in ['/majors', '/cutoffs']:
         assert client.get(path).status_code == 200
     guest_token = client.post('/sessions').json()['token']
     assert client.get('/messages', headers={'X-Session-Token': guest_token}).status_code == 200
@@ -95,7 +96,7 @@ def test_lecturer_content_and_admin_account_permissions(client):
     response = client.post('/admin/accounts', headers=root, json={'email': 'teacher@example.com', 'password': 'teacher-password-123456', 'role': 'lecturer'})
     assert response.status_code == 201
     teacher = login(client, 'teacher@example.com', 'teacher-password-123456')
-    for path in ['/admin/documents', '/admin/majors', '/admin/freshmen', '/admin/review']:
+    for path in ['/admin/documents', '/admin/majors', '/admin/review']:
         assert client.get(path, headers=teacher).status_code == 200
     assert client.get('/admin/accounts', headers=teacher).status_code == 403
     assert client.patch('/admin/accounts/'+response.json()['id'], headers=teacher, json={'role':'admin'}).status_code == 403
@@ -110,7 +111,7 @@ def test_lecturer_content_and_admin_account_permissions(client):
 def test_migration_preserves_legacy_credentials_once(tmp_path, monkeypatch):
     monkeypatch.setenv('DATA_DIR', str(tmp_path))
     settings.cache_clear()
-    with sqlite3.connect(tmp_path/'utc.sqlite3') as conn:
+    with closing(sqlite3.connect(tmp_path/'utc.sqlite3')) as conn, conn:
         conn.execute('CREATE TABLE admins(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,role TEXT,is_active INTEGER)')
         for role in ['admin','editor','viewer']:
             conn.execute('INSERT INTO admins VALUES(?,?,?,?,1)', (role, role+'@example.com', password_hash('legacy-password-123456'), role))

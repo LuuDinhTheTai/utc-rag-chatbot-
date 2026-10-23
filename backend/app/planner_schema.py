@@ -11,7 +11,7 @@ def ensure_planner(conn):
         if not conn.execute("SELECT 1 FROM schema_migrations WHERE version='planner_v1'").fetchone():
             statement = ''
             path = Path(__file__).resolve().parents[1] / 'schema/planner.sql'
-            for line in path.read_text().splitlines(True):
+            for line in path.read_text(encoding='utf-8').splitlines(True):
                 statement += line
                 if sqlite3.complete_statement(statement):
                     conn.execute(statement)

@@ -338,8 +338,6 @@ def review(uid=Depends(admin)):
 from .majors import make_router
 app.include_router(make_router(db, admin, can_edit))
 
-from .freshmen import make_router as make_freshmen_router
-app.include_router(make_freshmen_router(db, admin, can_edit))
 
 from .cutoffs import router as cutoff_router
 app.include_router(cutoff_router)

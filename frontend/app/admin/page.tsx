@@ -5,14 +5,13 @@ import {useAuth} from '../../components/AuthProvider';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { api, Message } from '../../lib/api';
 import MajorCatalogue from '../../components/MajorCatalogue';
-import FreshmanGuide from '../../components/FreshmanGuide';
 
 type Role = 'admin' | 'lecturer' | 'student';
 type Account = {id:string; email:string; role:Role; is_active:number};
 type Doc = {id: string; title: string; status: string; admission_year: number; campus: string; chunk_count: number; error?: string; storage_path?: string; original_filename?: string};
 type Review = {unanswered: Message[]; feedback: {id: string; rating: number; comment: string; messages: {content: string}}[]};
 export default function AdminPage(){
-  const [section,setSection]=useState<'documents'|'majors'|'freshmen'|'accounts'>('documents');
+  const [section,setSection]=useState<'documents'|'majors'|'accounts'>('documents');
   const documentForm = useRef<HTMLFormElement>(null);
   const auth=useAuth();
   const token=auth.token;
@@ -54,7 +53,7 @@ const metadata=JSON.stringify({title:title.trim(),source_url:url.trim(),admissio
   return <main className="admin-page"><header className="admin-header"><Link href="/" className="brand"><UtcLogo/><span>Quản trị tri thức<small>TRỢ LÝ TUYỂN SINH</small></span></Link><Link href="/">← Về chatbot</Link>{token&&<button onClick={()=>run(async()=>{await auth.logout();setRole(undefined);setAccounts([]);setDocs([]);setReview(undefined);})}>Đăng xuất</button>}</header>
     {error&&<div className="error" role="alert">{error}</div>}{notice&&<div className="notice" role="status">{notice}</div>}
     {token&&<>
-      <nav className="admin-tabs" aria-label="Quản trị"><button aria-pressed={section==='documents'} onClick={()=>setSection('documents')}>Tài liệu & phản hồi</button><button aria-pressed={section==='majors'} onClick={()=>setSection('majors')}>Ngành học</button><button aria-pressed={section==='freshmen'} onClick={()=>setSection('freshmen')}>Tân sinh viên</button>{role==='admin'&&<button aria-pressed={section==='accounts'} onClick={()=>setSection('accounts')}>Tài khoản</button>}<Link href="/majors">Xem trang người dùng ↗</Link></nav>
+      <nav className="admin-tabs" aria-label="Quản trị"><button aria-pressed={section==='documents'} onClick={()=>setSection('documents')}>Tài liệu & phản hồi</button><button aria-pressed={section==='majors'} onClick={()=>setSection('majors')}>Ngành học</button>{role==='admin'&&<button aria-pressed={section==='accounts'} onClick={()=>setSection('accounts')}>Tài khoản</button>}<Link href="/majors">Xem trang người dùng ↗</Link></nav>
       {section==='accounts'&&role==='admin'?<section className="panel"><h2>Quản lý tài khoản</h2>
         <form className="form-grid" onSubmit={e=>{e.preventDefault();run(async()=>{await api('/admin/accounts',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({email:newEmail,password:newPassword,role:newRole})});setNewEmail('');setNewPassword('');await refresh();});}}>
           <label>Email<input type="email" required value={newEmail} onChange={e=>setNewEmail(e.target.value)}/></label>
@@ -63,7 +62,7 @@ const metadata=JSON.stringify({title:title.trim(),source_url:url.trim(),admissio
           <button className="primary" disabled={busy}>Thêm tài khoản</button>
         </form>
         {accounts.map(account=><div className="document-row" key={account.id}><div><strong>{account.email}</strong><p>{account.is_active?'Đang hoạt động':'Đã khóa'}</p></div><div className="row-actions"><select aria-label={`Vai trò của ${account.email}`} value={account.role} disabled={busy} onChange={e=>run(async()=>{await api(`/admin/accounts/${account.id}`,{method:'PATCH',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({role:e.target.value})});await refresh();})}><option value="student">Sinh viên</option><option value="lecturer">Giảng viên</option><option value="admin">Admin</option></select><button disabled={busy} onClick={()=>run(async()=>{await api(`/admin/accounts/${account.id}`,{method:'PATCH',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({is_active:!account.is_active})});await refresh();})}>{account.is_active?'Khóa':'Mở khóa'}</button></div></div>)}
-      </section>:section==='majors'?<MajorCatalogue token={token} readOnly={!canEdit}/>:section==='freshmen'?<FreshmanGuide token={token} readOnly={!canEdit}/>:<>
+      </section>:section==='majors'?<MajorCatalogue token={token} readOnly={!canEdit}/>:<>
       <div className="admin-intro"><div className="eyebrow">KHO TRI THỨC TUYỂN SINH</div><h1>Quản lý nguồn thông tin</h1><p>Cập nhật tài liệu chính thức để câu trả lời luôn có căn cứ.</p></div>
       <div className="stats"><div><strong>{docs.length}</strong>Tài liệu (tối đa 200)</div><div><strong>{docs.filter(d=>d.status==='ready').length}</strong>Sẵn sàng tra cứu</div><div><strong>{review?.unanswered.length||0}</strong>Chưa đủ nguồn (100 gần nhất)</div></div>
       {canEdit&&<section className="panel"><h2>Thêm tài liệu</h2><form ref={documentForm} onSubmit={preview}><div className="form-grid"><label>Tiêu đề<input required minLength={3} maxLength={300} value={title} onChange={e=>setTitle(e.target.value)}/></label><label>URL nguồn chính thức<input type="url" required maxLength={2000} placeholder="https://tuyensinh.utc.edu.vn/…" value={url} onChange={e=>{setUrl(e.target.value);setText('');}}/></label><label>Năm tuyển sinh<input type="number" min={2000} max={2100} step={1} required value={year} onChange={e=>setYear(Number(e.target.value))}/></label><label>Cơ sở<select value={campus} onChange={e=>setCampus(e.target.value)}><option value="hanoi">Hà Nội</option><option value="hcm">TP. Hồ Chí Minh</option></select></label></div><label className="upload">Tệp PDF, TXT hoặc Markdown (tối đa 10 MB)<input type="file" accept=".pdf,.txt,.md" onChange={e=>{setFile(e.target.files?.[0]);setText('');}}/><small>Để trống tệp để lấy nội dung từ URL. Tệp gốc được lưu riêng tư trên máy chủ khi xác nhận. Tệp tải lên vẫn cần URL nguồn để trích dẫn.</small></label><button disabled={busy} type="submit">{busy?'Đang xử lý…':'Trích xuất & xem trước'}</button></form>{text&&<div className="preview"><label>Nội dung đã trích xuất<textarea value={text} onChange={e=>setText(e.target.value)} rows={12}/></label><button className="primary" disabled={busy || text.length<30} onClick={save}>Xác nhận & lập chỉ mục</button></div>}</section>}

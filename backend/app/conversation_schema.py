@@ -10,7 +10,7 @@ def ensure_conversations(conn):
     try:
         if not conn.execute("SELECT 1 FROM schema_migrations WHERE version='conversations_v1'").fetchone():
             statement = ''
-            for line in (Path(__file__).resolve().parents[1]/'schema/conversations.sql').read_text().splitlines(True):
+            for line in (Path(__file__).resolve().parents[1]/'schema/conversations.sql').read_text(encoding='utf-8').splitlines(True):
                 statement += line
                 if sqlite3.complete_statement(statement):
                     conn.execute(statement)

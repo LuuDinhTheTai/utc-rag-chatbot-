@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
-import {FormEvent,useEffect,useRef,useState} from 'react';
+import {FormEvent,useCallback,useEffect,useRef,useState} from 'react';
 import UtcLogo from './UtcLogo';
 import Icon from './Icon';
 import {api,Message} from '../lib/api';
 import {useAuth} from './AuthProvider';
+import ConversationHistorySidebar from './ConversationHistorySidebar';
 
 type Info={id:string;title:string;created_at:string;updated_at:string};
 type History={conversation:Info;items:Message[];next_before:string|null;next_after:string|null};
@@ -12,10 +13,12 @@ const prompts=['Trường có những phương thức xét tuyển nào?','Đi�
 const errorText=(e:unknown)=>e instanceof Error?e.message:'Không thể kết nối máy chủ.';
 export default function ChatWorkspace({conversation='',message=''}:{conversation?:string;message?:string}){
   const {token,loading}=useAuth();
+  const [historyOpen,setHistoryOpen]=useState(false);
+  const closeHistory=useCallback(()=>setHistoryOpen(false),[]);
   if(loading)return <main className="chat-main"><div className="loading" role="status">Đang kiểm tra phiên đăng nhập…</div></main>;
-  return <ChatSession key={`${token||'guest'}:${conversation}:${message}`} initialConversation={conversation} initialMessage={message}/>;
+  return <div className="chat-layout"><ChatSession key={`${token||'guest'}:${conversation}:${message}`} initialConversation={conversation} initialMessage={message} historyOpen={historyOpen} onOpenHistory={()=>setHistoryOpen(true)}/><ConversationHistorySidebar currentId={conversation} open={historyOpen} onClose={closeHistory}/></div>;
 }
-function ChatSession({initialConversation,initialMessage}:{initialConversation:string;initialMessage:string}){
+function ChatSession({initialConversation,initialMessage,historyOpen,onOpenHistory}:{initialConversation:string;initialMessage:string;historyOpen:boolean;onOpenHistory:()=>void}){
   const auth=useAuth();const signedIn=Boolean(auth.user?.id);
   const [messages,setMessages]=useState<Message[]>([]),[question,setQuestion]=useState(''),[busy,setBusy]=useState(false),[loadingHistory,setLoadingHistory]=useState(true);
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[title,setTitle]=useState('Cuộc trò chuyện mới'),[historyUnavailable,setHistoryUnavailable]=useState(false);
@@ -90,7 +93,7 @@ function ChatSession({initialConversation,initialMessage}:{initialConversation:s
     setBookmarkBusy(id);setError('');try{const result=await api<{bookmarked:boolean}>('/conversations/bookmarks/'+id,{method:bookmarks[id]?'DELETE':'POST'});if(alive.current){setBookmarks(old=>({...old,[id]:result.bookmarked}));setNotice(result.bookmarked?'Đã lưu câu trả lời. Xem lại trong Lịch sử hội thoại → Câu trả lời đã lưu.':'Đã bỏ lưu câu trả lời.');}}catch(e){if(alive.current)setError(errorText(e));}finally{if(alive.current)setBookmarkBusy('');}
   }
   return <main className="chat-main">
-    <header className="topbar chat-history-header"><span className="topbar-title">{signedIn?title:'Trợ lý tuyển sinh'} <span className="tag">UTC</span><small>{signedIn?'Hội thoại được lưu riêng vào tài khoản.':'Thông tin rõ ràng. Lựa chọn tự tin.'}</small></span><Link className="chat-history-link" href="/conversations"><Icon name="history"/>Lịch sử hội thoại</Link></header>
+    <header className="topbar chat-history-header"><span className="topbar-title">{signedIn?title:'Trợ lý tuyển sinh'} <span className="tag">UTC</span><small>{signedIn?'Hội thoại được lưu riêng vào tài khoản.':'Thông tin rõ ràng. Lựa chọn tự tin.'}</small></span><button type="button" className="chat-history-toggle" onClick={onOpenHistory} aria-expanded={historyOpen} aria-controls="chat-history-sidebar" aria-label="Mở lịch sử hội thoại"><Icon name="history"/><span aria-hidden="true">Lịch sử</span></button></header>
     <section className="conversation" ref={viewport} aria-live="polite">
       {before&&<button className="history-page-control" disabled={loadingHistory||busy} onClick={()=>loadHistory('before')}>Xem tin nhắn trước đó</button>}
       {loadingHistory&&<div className="loading" role="status">Đang tải hội thoại…</div>}
