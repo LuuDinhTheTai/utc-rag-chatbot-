@@ -38,6 +38,8 @@ def connect():
         ensure_planner(conn)
         from .conversation_schema import ensure_conversations
         ensure_conversations(conn)
+        from .routing_schema import ensure_routing
+        ensure_routing(conn)
         conn.execute('PRAGMA journal_mode=WAL')
         return conn
     except Exception:

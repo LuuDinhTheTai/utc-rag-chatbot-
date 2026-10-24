@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     embedding_dimensions: int = Field(default=768, ge=1, le=3072)
     frontend_origin: str = 'http://localhost:3000'
     default_year: int = 2026
+    question_routing_enabled: bool = True
+    router_timeout_seconds: int = Field(default=20, ge=1, le=60)
     similarity_threshold: float = 0.65
     rate_limit_global: int = 120
     rate_limit_chat: int = 20

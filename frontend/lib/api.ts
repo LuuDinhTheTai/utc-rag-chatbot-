@@ -32,4 +32,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 export type Source = {id: string; citation: number; title: string; source_url: string; content: string; admission_year: number; campus: string};
-export type Message = {id: string; role: 'user' | 'assistant'; content: string; question?: string; sources?: Source[]; supported?: boolean; latency_ms?: number; context_year?: number; context_campus?: string; bookmarked?: boolean; rating?: number | null};
+export type Message = {id: string; role: 'user' | 'assistant'; content: string; question?: string; sources?: Source[]; supported?: boolean; latency_ms?: number; context_year?: number | null; context_campus?: string | null; bookmarked?: boolean; rating?: number | null;
+  intent?: 'greeting' | 'social' | 'capabilities' | 'admissions' | 'out_of_scope' | 'unclear' | null;
+  response_kind?: 'grounded' | 'no_evidence' | 'social' | 'capabilities' | 'out_of_scope' | 'clarification' | null;
+  router_version?: string | null;
+};
