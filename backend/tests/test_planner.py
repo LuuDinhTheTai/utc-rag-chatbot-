@@ -33,12 +33,15 @@ def rule_body():
 
 def test_manual_calculation(planner):
     client,_,_=planner
-    result=client.post('/score-calculations',json=dict(year=2026,campus='hanoi',scores=[7.25,8,9],priority=1,bonus=.5))
+    result=client.post('/score-calculations',json=dict(year=2026,campus='hanoi',program='other',scores=[7.25,8,9],priority=1,bonus=.5))
     assert result.status_code==200,result.text
     data=result.json()
-    assert data['total']=='25.75' and data['base']=='24.25'
+    assert data['total']=='25.13' and data['base']=='23.63'
     assert data['mode']=='manual' and data['rule'] is None
-    assert client.post('/score-calculations',json=dict(year=2026,campus='hanoi',scores=[10,10,10],priority=5,bonus=3)).json()['total']=='30.00'
+    assert client.post('/score-calculations',json=dict(year=2026,campus='hanoi',program='other',scores=[10,10,10],priority=5,bonus=3)).json()['total']=='30.00'
+    english=client.post('/score-calculations',json=dict(year=2026,campus='hanoi',program='english',scores=[7.25,8,9])).json()
+    assert english['base']=='24.25' and english['total']=='24.25'
+    assert client.post('/score-calculations',json=dict(year=2026,campus='hanoi',scores=[7,8,9])).status_code==422
     for scores in ([11,2,3],[-1,2,3],[1,2],['NaN',2,3]):
         assert client.post('/score-calculations',json=dict(year=2026,campus='hanoi',scores=scores)).status_code==422
 

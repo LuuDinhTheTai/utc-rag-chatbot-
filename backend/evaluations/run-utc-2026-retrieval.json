@@ -1,0 +1,474 @@
+{
+  "version": 1,
+  "created_at": "2026-10-24T05:56:41.677438+00:00",
+  "dataset_sha256": "65a20b38d85d179265895d9506ea5fbc8e17f856e0971a5aa609035a9509315f",
+  "mode": "retrieval",
+  "config": {
+    "gemini_model": null,
+    "embedding_model": "gemini-embedding-001",
+    "similarity_threshold": 0.65,
+    "match_count": 6
+  },
+  "summary": {
+    "cases": 13,
+    "positive_cases": 8,
+    "errors": 0,
+    "retrieval_hit_at_6": 1.0,
+    "mean_reciprocal_rank": 1.0,
+    "support_accuracy": null,
+    "citation_hit_rate": null,
+    "phrase_pass_rate": null,
+    "pass_rate": 1.0
+  },
+  "results": [
+    {
+      "id": "k67-giay-bao-diem",
+      "question": "Tân sinh viên K67 tốt nghiệp THPT năm 2026 cần nộp bản nào của giấy chứng nhận kết quả thi?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Nộp bản gốc giấy chứng nhận kết quả thi tốt nghiệp THPT năm 2026.",
+      "required_answer_phrases": [
+        "bản gốc"
+      ],
+      "retrieved": [
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.8131
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7299
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6851
+        },
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.6835
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6824
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6703
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "k67-bang-tot-nghiep-cu",
+      "question": "Tân sinh viên K67 đã tốt nghiệp THPT trước năm 2026 cần nộp bằng tốt nghiệp dạng nào?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Nộp một bản sao công chứng bằng tốt nghiệp THPT.",
+      "required_answer_phrases": [
+        "bản sao công chứng"
+      ],
+      "retrieved": [
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7957
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7207
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6625
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6614
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6522
+        },
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.6506
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "k67-hoc-ba",
+      "question": "Hồ sơ nhập học K67 cần nộp học bạ THPT như thế nào?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Nộp một bản sao công chứng học bạ THPT.",
+      "required_answer_phrases": [
+        "bản sao công chứng"
+      ],
+      "retrieved": [
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7761
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7278
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "k67-ve-my-thuat",
+      "question": "Nếu dùng tổ hợp V00 hoặc V01 để xét tuyển ngành Kiến trúc, hồ sơ K67 cần thêm giấy tờ nào?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Nộp bản công chứng phiếu điểm môn Vẽ Mỹ thuật.",
+      "required_answer_phrases": [
+        "Vẽ Mỹ thuật"
+      ],
+      "retrieved": [
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7638
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6875
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6695
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6584
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6546
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "k67-nghia-vu-quan-su",
+      "question": "Tân sinh viên nam K67 phải nộp các giấy tờ gì về nghĩa vụ quân sự?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Giấy chứng nhận đăng ký nghĩa vụ quân sự và giấy giới thiệu di chuyển nghĩa vụ quân sự do Ban chỉ huy quân sự xã hoặc phường cấp.",
+      "required_answer_phrases": [
+        "nghĩa vụ quân sự"
+      ],
+      "retrieved": [
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7506
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.7446
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6739
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6685
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6672
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6667
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "le-phi-ha-noi",
+      "question": "Thí sinh nộp hồ sơ ở Hà Nội thanh toán lệ phí đăng ký xét tuyển năm 2026 trong khoảng thời gian nào?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Từ ngày 15/7 đến 17h00 ngày 16/7/2026.",
+      "required_answer_phrases": [
+        "15/7",
+        "16/7"
+      ],
+      "retrieved": [
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.7943
+        },
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.6864
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.6694
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "le-phi-hai-phong",
+      "question": "Lịch thanh toán lệ phí xét tuyển năm 2026 của thí sinh nộp hồ sơ tại Hải Phòng là khi nào?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Từ ngày 16/7 đến 17h00 ngày 17/7/2026.",
+      "required_answer_phrases": [
+        "16/7",
+        "17/7"
+      ],
+      "retrieved": [
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.7875
+        },
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.6802
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "le-phi-tong-dai",
+      "question": "Nếu lỗi thanh toán lệ phí xét tuyển trên Cổng Dịch vụ công Quốc gia, thí sinh gọi số hỗ trợ nào?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": [
+        "https://www.utc.edu.vn/"
+      ],
+      "expected_answer": "Gọi 1800 1096 để được hỗ trợ lỗi thanh toán trên Cổng Dịch vụ công Quốc gia.",
+      "required_answer_phrases": [
+        "1800 1096"
+      ],
+      "retrieved": [
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.7934
+        },
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.6971
+        }
+      ],
+      "retrieval_hit": true,
+      "reciprocal_rank": 1.0,
+      "error": null,
+      "passed": true
+    },
+    {
+      "id": "ngoai-pham-vi-diem-chuan",
+      "question": "Điểm trúng tuyển ngành Công nghệ thông tin năm 2026 chính xác là bao nhiêu?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "expected_answer": null,
+      "required_answer_phrases": [],
+      "retrieved": [
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.6595
+        }
+      ],
+      "retrieval_hit": null,
+      "reciprocal_rank": null,
+      "error": null,
+      "passed": null
+    },
+    {
+      "id": "ngoai-pham-vi-hoc-phi",
+      "question": "Mức học phí chính xác mỗi tháng của ngành Kỹ thuật ô tô năm 2026 là bao nhiêu?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "expected_answer": null,
+      "required_answer_phrases": [],
+      "retrieved": [],
+      "retrieval_hit": null,
+      "reciprocal_rank": null,
+      "error": null,
+      "passed": null
+    },
+    {
+      "id": "ngoai-pham-vi-du-doan",
+      "question": "Với điểm của em, em chắc chắn trúng tuyển đại học năm 2026 chứ?",
+      "filter_year": 2026,
+      "filter_campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "expected_answer": null,
+      "required_answer_phrases": [],
+      "retrieved": [
+        {
+          "document_id": "6fbc10b2-08ee-4a1d-b973-8a56bab5122d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "Lệ phí xét tuyển 2026",
+          "similarity": 0.7065
+        },
+        {
+          "document_id": "457f9e13-0c22-40dd-b452-3ecd5b47200d",
+          "source_url": "https://www.utc.edu.vn/",
+          "title": "K67",
+          "similarity": 0.683
+        }
+      ],
+      "retrieval_hit": null,
+      "reciprocal_rank": null,
+      "error": null,
+      "passed": null
+    },
+    {
+      "id": "sai-nam-2025",
+      "question": "Hồ sơ nhập học khóa 2025 cần những giấy tờ gì?",
+      "filter_year": 2025,
+      "filter_campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "expected_answer": null,
+      "required_answer_phrases": [],
+      "retrieved": [],
+      "retrieval_hit": null,
+      "reciprocal_rank": null,
+      "error": null,
+      "passed": null
+    },
+    {
+      "id": "sai-co-so-hcm",
+      "question": "Phân hiệu TP. Hồ Chí Minh năm 2026 có thông báo riêng nào về hồ sơ nhập học?",
+      "filter_year": 2026,
+      "filter_campus": "hcm",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "expected_answer": null,
+      "required_answer_phrases": [],
+      "retrieved": [],
+      "retrieval_hit": null,
+      "reciprocal_rank": null,
+      "error": null,
+      "passed": null
+    }
+  ]
+}

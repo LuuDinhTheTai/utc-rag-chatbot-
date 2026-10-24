@@ -93,6 +93,7 @@ class Calculation(Input):
     year: Year
     campus: Campus
     rule_id: UUID | None = None
+    program: Literal['other','english'] | None = None
     scores: list[Mark] = Field(min_length=3,max_length=3)
     priority: Priority = Decimal('0')
     bonus: Bonus = Decimal('0')
@@ -113,7 +114,11 @@ def calculate(body:Calculation):
             rule = rule_json(row)
         if rule['admission_year'] != body.year or rule['campus'] != body.campus:
             raise HTTPException(422,'Công thức không áp dụng cho năm/cơ sở đã chọn.')
-    weights = [Decimal(str(v)) for v in rule['weights']] if rule else [Decimal(1)]*3
+    if not rule and body.year == 2026 and body.program is None:
+        raise HTTPException(422,'Chọn ngành Ngôn ngữ Anh hoặc ngành khác để áp dụng công thức UTC 2026.')
+    weights = ([Decimal(str(v)) for v in rule['weights']] if rule else
+               [Decimal(1),Decimal(1),Decimal(1)] if body.program == 'english' or body.year != 2026 else
+               [Decimal(2),Decimal(1),Decimal(1)])
     if rule and (body.priority>Decimal(str(rule['priority_cap'])) or body.bonus>Decimal(str(rule['bonus_cap']))):
         raise HTTPException(422,'Điểm ưu tiên/điểm cộng vượt mức của công thức đã chọn.')
     base = sum(s*w for s,w in zip(body.scores,weights))*3/sum(weights)
@@ -125,10 +130,15 @@ def calculate(body:Calculation):
         # This supported formula uses the normalized subject total, BEFORE bonus.
         priority *= min(Decimal(1),max(Decimal(0),(30-base)/Decimal('7.5')))
     total = min(Decimal(30),base+body.bonus+priority)
+    formula = ('(Toán × 2 + môn 2 + môn 3) × 3/4 + ưu tiên + điểm cộng; tối đa 30.'
+               if not rule and body.year == 2026 and body.program == 'other' else
+               'Toán + tiếng Anh + môn còn lại + ưu tiên + điểm cộng; tối đa 30.'
+               if not rule and body.year == 2026 else
+               'Tổng (điểm môn × hệ số) × 3 / tổng hệ số; cộng ưu tiên và điểm cộng; tối đa 30.')
     return {'base':rounded(base),'priority_applied':rounded(priority),'bonus':rounded(body.bonus),
             'total':rounded(total),'scale':30,'year':body.year,'campus':body.campus,'method':'PT1',
             'rule':rule,'mode':'published' if rule else 'manual',
-            'formula':'Tổng (điểm môn × hệ số) × 3 / tổng hệ số; cộng ưu tiên và điểm cộng; tối đa 30.',
+            'formula':formula,
             'priority_formula':'ƯT × min(1, max(0, (30 − điểm môn đã chuẩn hóa) / 7,5))' if mode=='taper_30' else 'Điểm ưu tiên đã điều chỉnh do bạn nhập.',
             'notice':'Kết quả tham khảo, không xác nhận đủ điều kiện hay trúng tuyển. Không tự quy đổi học bạ, chứng chỉ, điểm ĐGNL hoặc ĐGTD.'}
 

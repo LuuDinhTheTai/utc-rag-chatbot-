@@ -1,0 +1,23 @@
+{
+  "v1_digest": "f293e2c4bd9bb723b1ce3dac517a06d8db9f4f53aca89e1115ce26d90ee680ae",
+  "v2_digest": "ad8582170b5a00944ea15a8394bcba8bb534f621e889f6c40853e7f3edff4fd0",
+  "files": {},
+  "report": {
+    "counts": {
+      "accounts": 6,
+      "auth_sessions": 1,
+      "chat_sessions": 5,
+      "messages": 24,
+      "feedback": 0,
+      "documents": 2,
+      "document_chunks": 9,
+      "major_catalogue": 85,
+      "cutoff_scores": 558,
+      "freshman_guides": 1,
+      "freshman_items": 0,
+      "api_rate_limits": 12
+    },
+    "orphan_document_authors": [],
+    "unlinked_citations": 0
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "k67-giay-bao-diem",
+      "question": "Tân sinh viên K67 tốt nghiệp THPT năm 2026 cần nộp bản nào của giấy chứng nhận kết quả thi?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Nộp bản gốc giấy chứng nhận kết quả thi tốt nghiệp THPT năm 2026.",
+      "required_answer_phrases": ["bản gốc"]
+    },
+    {
+      "id": "k67-bang-tot-nghiep-cu",
+      "question": "Tân sinh viên K67 đã tốt nghiệp THPT trước năm 2026 cần nộp bằng tốt nghiệp dạng nào?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Nộp một bản sao công chứng bằng tốt nghiệp THPT.",
+      "required_answer_phrases": ["bản sao công chứng"]
+    },
+    {
+      "id": "k67-hoc-ba",
+      "question": "Hồ sơ nhập học K67 cần nộp học bạ THPT như thế nào?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Nộp một bản sao công chứng học bạ THPT.",
+      "required_answer_phrases": ["bản sao công chứng"]
+    },
+    {
+      "id": "k67-ve-my-thuat",
+      "question": "Nếu dùng tổ hợp V00 hoặc V01 để xét tuyển ngành Kiến trúc, hồ sơ K67 cần thêm giấy tờ nào?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Nộp bản công chứng phiếu điểm môn Vẽ Mỹ thuật.",
+      "required_answer_phrases": ["Vẽ Mỹ thuật"]
+    },
+    {
+      "id": "k67-nghia-vu-quan-su",
+      "question": "Tân sinh viên nam K67 phải nộp các giấy tờ gì về nghĩa vụ quân sự?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Giấy chứng nhận đăng ký nghĩa vụ quân sự và giấy giới thiệu di chuyển nghĩa vụ quân sự do Ban chỉ huy quân sự xã hoặc phường cấp.",
+      "required_answer_phrases": ["nghĩa vụ quân sự"]
+    },
+    {
+      "id": "le-phi-ha-noi",
+      "question": "Thí sinh nộp hồ sơ ở Hà Nội thanh toán lệ phí đăng ký xét tuyển năm 2026 trong khoảng thời gian nào?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Từ ngày 15/7 đến 17h00 ngày 16/7/2026.",
+      "required_answer_phrases": ["15/7", "16/7"]
+    },
+    {
+      "id": "le-phi-hai-phong",
+      "question": "Lịch thanh toán lệ phí xét tuyển năm 2026 của thí sinh nộp hồ sơ tại Hải Phòng là khi nào?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Từ ngày 16/7 đến 17h00 ngày 17/7/2026.",
+      "required_answer_phrases": ["16/7", "17/7"]
+    },
+    {
+      "id": "le-phi-tong-dai",
+      "question": "Nếu lỗi thanh toán lệ phí xét tuyển trên Cổng Dịch vụ công Quốc gia, thí sinh gọi số hỗ trợ nào?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": true,
+      "expected_source_urls": ["https://www.utc.edu.vn/"],
+      "expected_answer": "Gọi 1800 1096 để được hỗ trợ lỗi thanh toán trên Cổng Dịch vụ công Quốc gia.",
+      "required_answer_phrases": ["1800 1096"]
+    },
+    {
+      "id": "ngoai-pham-vi-diem-chuan",
+      "question": "Điểm trúng tuyển ngành Công nghệ thông tin năm 2026 chính xác là bao nhiêu?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "required_answer_phrases": []
+    },
+    {
+      "id": "ngoai-pham-vi-hoc-phi",
+      "question": "Mức học phí chính xác mỗi tháng của ngành Kỹ thuật ô tô năm 2026 là bao nhiêu?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "required_answer_phrases": []
+    },
+    {
+      "id": "ngoai-pham-vi-du-doan",
+      "question": "Với điểm của em, em chắc chắn trúng tuyển đại học năm 2026 chứ?",
+      "year": 2026,
+      "campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "required_answer_phrases": []
+    },
+    {
+      "id": "sai-nam-2025",
+      "question": "Hồ sơ nhập học khóa 2025 cần những giấy tờ gì?",
+      "year": 2025,
+      "campus": "hanoi",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "required_answer_phrases": []
+    },
+    {
+      "id": "sai-co-so-hcm",
+      "question": "Phân hiệu TP. Hồ Chí Minh năm 2026 có thông báo riêng nào về hồ sơ nhập học?",
+      "year": 2026,
+      "campus": "hcm",
+      "expect_supported": false,
+      "expected_source_urls": [],
+      "required_answer_phrases": []
+    }
+  ]
+}
