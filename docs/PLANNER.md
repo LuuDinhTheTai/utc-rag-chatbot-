@@ -9,7 +9,9 @@ Ba tính năng có trang và mục sidebar riêng: **Tính điểm xét tuyển*
 - Tính bằng Decimal; làm tròn hai chữ số ở kết quả, không làm tròn giữa các bước. Kết quả phân tách điểm môn, ưu tiên, điểm cộng, công thức và nguồn.
 - Chỉ hỗ trợ phạm vi công thức trên cho điểm ba môn THPT. Không tự quy đổi chứng chỉ ngoại ngữ, học bạ, giải thưởng hoặc ĐGNL/ĐGTD; không kết luận trúng tuyển. Hệ thống không suy ra diện ưu tiên từ dữ liệu cá nhân.
 
-**Không có công thức chính thức được gieo sẵn.** Trong lần triển khai này cổng nguồn UTC trả HTTP 403 khi kiểm tra. Không gắn nhãn một quy tắc năm 2026 là đã xác minh khi chưa đối chiếu được nguồn. Máy tính tự tính vẫn hoạt động; để đăng quy tắc, quản trị viên mở phần quản trị ở cuối trang Tính điểm xét tuyển, nhập tổ hợp/môn/hệ số/cách ưu tiên/mức trần, URL thông báo UTC và phạm vi áp dụng, rồi xác nhận đã đối chiếu. Chỉ đăng nếu công thức của thông báo thực sự khớp cách tính được hỗ trợ. Không dùng hình thức đăng này cho công thức khác.
+Năm 2026, chế độ tự tính PT1 dùng công thức trong [thông tin tuyển sinh UTC](https://tuyensinh.utc.edu.vn/?q=tin-tuyen-sinh/th%C3%B4ng-tin-tuy%E1%BB%83n-sinh-%C4%91%E1%BA%A1i-h%E1%BB%8Dc-h%E1%BB%87-ch%C3%ADnh-quy-2026): các ngành khác Ngôn ngữ Anh tính `(Toán × 2 + môn 2 + môn 3) × 3/4`; Ngôn ngữ Anh tính tổng ba môn hệ số 1. Sau đó cộng ưu tiên đã điều chỉnh và điểm cộng do người dùng nhập, giới hạn 30 điểm. Công cụ chưa xác minh điều kiện xét tuyển hay quyền hưởng điểm cộng.
+
+Quản trị viên có thể đăng quy tắc cho phạm vi khác ở cuối trang Tính điểm xét tuyển, nhập tổ hợp/môn/hệ số/cách ưu tiên/mức trần, URL thông báo UTC và phạm vi áp dụng, rồi xác nhận đã đối chiếu. Chỉ đăng nếu công thức của thông báo thực sự khớp cách tính được hỗ trợ.
 
 Quy tắc đã đăng không sửa tại chỗ: thu hồi và đăng bản mới. Người dùng gửi ID đã thu hồi hoặc sai năm/cơ sở sẽ bị từ chối tính theo ID đó. Công thức đăng bởi quản trị viên không đồng nghĩa với việc hệ thống đã tự tải và xác minh nội dung nguồn.
 
