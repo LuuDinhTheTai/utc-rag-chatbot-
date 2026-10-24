@@ -29,10 +29,11 @@ Tài liệu phân tích từng module, luồng xử lý và cấu trúc lưu tr�
 
 - **Ngành học & điểm chuẩn:** trang `/majors` gộp danh mục, so sánh ngành và điểm chuẩn các năm. Bấm **Xem điểm chuẩn** tại một chương trình để lọc chính xác theo mã xét tuyển và cơ sở; có thể trở lại danh mục mà vẫn giữ bộ lọc và lựa chọn so sánh. `/cutoffs` chuyển tới `/majors?view=cutoffs`.
 
-- **Chat theo ngữ cảnh:** câu hỏi tiếp nối được diễn giải thành câu hỏi độc lập từ tối đa 8 tin nhắn gần nhất của cùng phiên trước khi tìm nguồn. Khi chưa rõ đối tượng, chatbot hỏi lại. Lịch sử không được dùng làm bằng chứng cho câu trả lời.
-- **Phạm vi hội thoại:** năm/cơ sở được nêu trong câu hỏi ưu tiên hơn bộ lọc; giao diện cập nhật bộ lọc sau mỗi câu trả lời và khôi phục khi tải lại trang. Thay bộ lọc để đổi phạm vi cho câu tiếp theo. Nút **Cuộc trò chuyện mới** đặt lại phiên, nội dung nhập và bộ lọc; lịch sử cũ không được đưa vào phiên mới.
+- **Định tuyến trước RAG:** lời chào/cảm ơn phổ biến trả lời bằng mẫu, không gọi AI. Các câu còn lại được phân loại thành tuyển sinh, ngoài phạm vi hoặc cần làm rõ trước khi tạo embedding. [Cách vận hành và đánh giá](docs/QUESTION-ROUTING.md).
+- **Chat theo ngữ cảnh:** bước phân loại đồng thời diễn giải câu hỏi độc lập từ tối đa 8 tin nhắn gần nhất và ngữ cảnh tuyển sinh gần nhất của cùng phiên. Khi chưa rõ đối tượng, chatbot hỏi lại. Lịch sử không được dùng làm bằng chứng cho câu trả lời.
+- **Phạm vi hội thoại:** năm/cơ sở nêu rõ trong câu hỏi ưu tiên hơn giá trị client gửi, rồi đến phạm vi cũ nếu là câu tiếp nối, cuối cùng là mặc định. Lời chào và câu ngoài phạm vi không ghi đè ngữ cảnh tuyển sinh. Nút **Cuộc trò chuyện mới** tạo phiên riêng.
 
-Khi có lịch sử, mỗi câu hỏi có thêm một lượt gọi Gemini để diễn giải ngữ cảnh. Dữ liệu gửi ở bước này gồm tối đa 8 tin nhắn gần nhất (nội dung mỗi tin giới hạn 2.000 ký tự), câu hỏi đã diễn giải và năm/cơ sở. Database cũ cần chạy migration v2 trước khi mở bằng phiên bản ứng dụng này; các trường ngữ cảnh được giữ lại khi chuyển đổi.
+Khi không khớp quy tắc phản hồi nhanh, mỗi câu hỏi có một bước gọi Gemini để phân loại và diễn giải ngữ cảnh. Dữ liệu gửi gồm câu hỏi hiện tại, tối đa 8 tin nhắn gần nhất (nội dung mỗi tin giới hạn 2.000 ký tự), câu hỏi/phạm vi tuyển sinh gần nhất và phạm vi client chỉ định. Database cũ cần chạy migration v2 trước khi mở bằng phiên bản ứng dụng này. Metadata định tuyến được thêm bằng migration tự động `question_routing_v1`; bản ghi cũ giữ giá trị null.
 
 - **Hỏi đáp tuyển sinh:** lọc theo năm và cơ sở Hà Nội/TP. Hồ Chí Minh; hiển thị trích dẫn, liên kết nguồn, lịch sử hội thoại và đánh giá câu trả lời.
 - **Kho tài liệu:** quản trị viên xem trước nội dung từ URL hoặc tệp, xác nhận lập chỉ mục, tải lại tệp gốc, tạm ẩn, thử lại khi lập chỉ mục lỗi và xóa tài liệu.
@@ -53,7 +54,7 @@ FastAPI ───────────► SQLite: tài khoản, phiên, tài 
    └───────────────► Gemini API: embedding và sinh câu trả lời
 ```
 
-Khi quản trị viên thêm tài liệu, backend trích xuất văn bản, chia thành các đoạn khoảng 1.200 ký tự với phần chồng 180 ký tự, gọi Gemini tạo embedding 768 chiều và lưu vào SQLite. Khi có câu hỏi, backend xác định năm/cơ sở, tạo embedding cho câu hỏi, tính độ tương đồng cosine trên các đoạn tài liệu đang hoạt động, lấy tối đa 6 đoạn đạt ngưỡng rồi mới gọi Gemini tạo câu trả lời có nguồn. Nếu không tìm được nguồn phù hợp, ứng dụng trả lời rằng chưa đủ căn cứ.
+Khi quản trị viên thêm tài liệu, backend trích xuất văn bản, chia thành các đoạn khoảng 1.200 ký tự với phần chồng 180 ký tự, gọi Gemini tạo embedding 768 chiều và lưu vào SQLite. Khi có câu hỏi, backend định tuyến trước; chỉ nhánh tuyển sinh đủ ngữ cảnh mới xác định năm/cơ sở, tạo embedding, tính độ tương đồng cosine trên các đoạn tài liệu đang hoạt động, lấy tối đa 6 đoạn đạt ngưỡng rồi gọi Gemini tạo câu trả lời có nguồn. Nếu không tìm được nguồn phù hợp, ứng dụng trả lời rằng chưa đủ căn cứ.
 
 **Dữ liệu gửi cho Gemini:** câu hỏi, văn bản của các đoạn được chọn và yêu cầu tạo câu trả lời; khi lập chỉ mục, nội dung các đoạn được gửi để tạo embedding. Cơ sở dữ liệu, phiên đăng nhập và tệp gốc nằm trên máy chủ của bạn.
 

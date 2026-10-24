@@ -20,6 +20,8 @@ from .localdb import Database, connect
 from .ratelimit import rate_limit_middleware
 from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, valid_url
 from .rag import resolve_question
+from .question_router import (VERSION as ROUTER_VERSION, MIXED_NOTICE, REPLIES,
+                              RouterConfigurationError, RouterRateLimited, RouterUnavailable, resolve_scope, route_question)
 
 logging.basicConfig(level=logging.INFO)
 # Do not log HTTP request URLs or credentials.
@@ -90,6 +92,28 @@ async def unexpected(request, exc):
     return JSONResponse(status_code=503, content={'detail': 'Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.'})
 
 
+@app.exception_handler(RouterUnavailable)
+async def router_unavailable(request, exc):
+    return JSONResponse(status_code=503, content={
+        'detail': 'Mình chưa thể xử lý câu hỏi lúc này. Vui lòng thử lại sau; quản trị viên có thể kiểm tra cấu hình Gemini.'})
+
+
+@app.exception_handler(RouterRateLimited)
+async def router_rate_limited(request, exc):
+    return JSONResponse(status_code=503, headers={'Retry-After': '30'}, content={
+        'detail': 'Gemini đang giới hạn lượt gọi hoặc đã hết hạn mức. Vui lòng thử lại sau; quản trị viên có thể kiểm tra quota.'})
+
+
+@app.exception_handler(RouterConfigurationError)
+async def router_configuration_error(request, exc):
+    messages = {
+        'model_not_found': 'Model Gemini đang cấu hình không tồn tại hoặc không còn khả dụng với API key này. Quản trị viên cần cập nhật GEMINI_MODEL và khởi động lại backend.',
+        'credentials_or_permissions': 'API key Gemini không hợp lệ hoặc không có quyền truy cập. Quản trị viên cần kiểm tra khóa và quyền của dự án.',
+        'invalid_request': 'Gemini không chấp nhận cấu hình yêu cầu hiện tại. Quản trị viên cần kiểm tra model và cấu hình tích hợp.',
+    }
+    return JSONResponse(status_code=502, content={'detail': messages.get(str(exc), messages['invalid_request'])})
+
+
 @app.get('/health')
 def health():
     cfg = settings()
@@ -108,13 +132,18 @@ def new_session(account=Depends(optional_account)):
 
 @app.get('/messages')
 def history(sid=Depends(session)):
-    return db().table('messages').select('*').eq('session_id', sid).order('created_at').limit(200).execute().data
+    from .localdb import decoded
+    from .v2store import relation
+    with connect() as conn:
+        return [decoded(row) for row in conn.execute(
+            f'SELECT projected.* FROM {relation("messages")} projected JOIN messages sequence ON sequence.id=projected.id '
+            'WHERE sequence.session_id=? ORDER BY sequence.created_at,sequence.rowid LIMIT 200', (sid,))]
 
 
 class ChatInput(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
-    year: int = Field(default=2026, ge=2000, le=2100)
-    campus: Literal['hanoi', 'hcm'] = 'hanoi'
+    year: int | None = Field(default=None, ge=2000, le=2100)
+    campus: Literal['hanoi', 'hcm'] | None = None
 
 
 @app.post('/chat')
@@ -123,33 +152,73 @@ def chat(body: ChatInput, sid=Depends(session)):
     if len(question) < 2:
         raise HTTPException(422, 'Vui lòng nhập câu hỏi.')
     started = time.monotonic()
-    try:
-        year, campus = filters(question, body.year, body.campus)
-    except ValueError as exc:
-        raise HTTPException(422, str(exc))
-    if not settings().google_api_key:
-        raise HTTPException(503, 'Chưa cấu hình Gemini API trên máy chủ.')
+    cfg = settings()
+    routing_enabled = getattr(cfg, 'question_routing_enabled', False)
     with connect() as conn:
         recent = conn.execute(
-            'SELECT role,content,resolved_question,context_year,context_campus FROM messages '
+            'SELECT role,content,resolved_question,context_year,context_campus,intent,response_kind FROM messages '
             'WHERE session_id=? ORDER BY created_at DESC,rowid DESC LIMIT 8', (sid,)
         ).fetchall()
+        previous = conn.execute(
+            "SELECT resolved_question,context_year,context_campus FROM messages WHERE session_id=? "
+            "AND role='assistant' AND context_year IS NOT NULL AND context_campus IS NOT NULL "
+            "AND (intent IS NULL OR intent IN ('admissions','unclear')) "
+            'ORDER BY created_at DESC,rowid DESC LIMIT 1', (sid,)
+        ).fetchone()
     context = [dict(role=row['role'], content=row['content'][:2000],
-                    resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'])
+                    resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'],
+                    intent=row['intent'], response_kind=row['response_kind'])
                for row in reversed(recent)]
-    resolved = resolve_question(question, context, year, campus)
-    if resolved.clarification:
-        answer, sources, supported = resolved.clarification, [], False
+    intent = response_kind = router_version = None
+    if routing_enabled:
+        latest = dict(question=(previous['resolved_question'] or '')[:3000],
+                      year=previous['context_year'], campus=previous['context_campus']) if previous else None
+        route = route_question(question, context, {'year': body.year, 'campus': body.campus}, latest)
+        intent, router_version = route.intent, ROUTER_VERSION
+        resolved_text = route.standalone_question or question
+        year = campus = None
+        sources, supported = [], False
+        if route.action == 'reply':
+            answer = REPLIES[route.reply_key]
+            response_kind = 'social' if intent in {'greeting', 'social'} else intent
+        else:
+            try:
+                year, campus = resolve_scope(question, route, body.year, body.campus, latest)
+                scope_error = None
+            except ValueError as exc:
+                scope_error = str(exc)
+            if scope_error or route.action == 'clarify':
+                answer = scope_error or route.clarification
+                response_kind = 'clarification'
+            else:
+                matches = match_chunks(resolved_text, year, campus, db(), embeddings())
+                answer, sources, supported = generate(resolved_text, matches) if matches else (NO_ANSWER, [], False)
+                response_kind = 'grounded' if supported else 'no_evidence'
+                if route.reason_code == 'mixed_request':
+                    answer += '\n\n' + MIXED_NOTICE
     else:
-        matches = match_chunks(resolved.question, year, campus, db(), embeddings())
-        answer, sources, supported = generate(resolved.question, matches) if matches else (NO_ANSWER, [], False)
+        # Rollback path preserves the original resolver and retrieval behavior.
+        try:
+            year, campus = filters(question, body.year or getattr(cfg, 'default_year', 2026), body.campus or 'hanoi')
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
+        if not cfg.google_api_key:
+            raise HTTPException(503, 'Chưa cấu hình Gemini API trên máy chủ.')
+        resolved = resolve_question(question, context, year, campus)
+        resolved_text = resolved.question
+        if resolved.clarification:
+            answer, sources, supported = resolved.clarification, [], False
+        else:
+            matches = match_chunks(resolved.question, year, campus, db(), embeddings())
+            answer, sources, supported = generate(resolved.question, matches) if matches else (NO_ANSWER, [], False)
     elapsed = round((time.monotonic() - started) * 1000)
     records = [
         {'session_id': sid, 'role': 'user', 'content': question, 'sources': [], 'question': None, 'supported': None, 'latency_ms': None},
         {'session_id': sid, 'role': 'assistant', 'question': question, 'content': answer, 'sources': sources, 'supported': supported, 'latency_ms': elapsed}
     ]
     for record in records:
-        record.update(resolved_question=resolved.question, context_year=year, context_campus=campus)
+        record.update(resolved_question=resolved_text, context_year=year, context_campus=campus,
+                      intent=intent, response_kind=response_kind, router_version=router_version)
     rows = db().table('messages').insert(records).execute().data
     log.info('chat_completed latency_ms=%d supported=%s', elapsed, supported)
     return next(row for row in rows if row['role'] == 'assistant')
@@ -324,7 +393,12 @@ def delete_document(document_id: UUID, uid=Depends(can_edit)):
 
 @app.get('/admin/review')
 def review(uid=Depends(admin)):
-    unanswered = db().table('messages').select('*').eq('role', 'assistant').eq('supported', False).order('created_at', desc=True).limit(100).execute().data
+    from .localdb import decoded
+    from .v2store import relation
+    with connect() as conn:
+        unanswered = [decoded(row) for row in conn.execute(
+            f"SELECT * FROM {relation('messages')} WHERE role='assistant' AND supported=0 "
+            "AND (response_kind IS NULL OR response_kind='no_evidence') ORDER BY created_at DESC LIMIT 100")]
     feedback = db().table('feedback').select('*').order('created_at', desc=True).limit(100).execute().data
     with connect() as conn:
         for item in feedback:
