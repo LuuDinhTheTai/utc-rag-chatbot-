@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .config import settings
 from .localdb import Database
-from .rag import NO_ANSWER, embeddings, filters, generate, match_chunks
+from .rag import NO_ANSWER, embeddings, filters, generate, match_chunks, scoped_question
 
 
 class EvaluationCase(BaseModel):
@@ -109,7 +109,7 @@ def evaluate_case(case: EvaluationCase, embedding_model, database: Database,
         result['passed'] = result['retrieval_hit']
         return result
 
-    answer, citations, supported = generate(case.question, matches) if matches else (NO_ANSWER, [], False)
+    answer, citations, supported = generate(scoped_question(case.question, year, campus), matches) if matches else (NO_ANSWER, [], False)
     cited_urls = [source['source_url'] for source in citations]
     phrase_checks = {phrase: normalized(phrase) in normalized(answer)
                      for phrase in case.required_answer_phrases}

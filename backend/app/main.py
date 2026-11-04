@@ -18,10 +18,11 @@ from .auth import router as auth_router, admin, can_edit, owner, optional_accoun
 from .config import settings
 from .localdb import Database, connect
 from .ratelimit import rate_limit_middleware
-from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, valid_url
+from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, scoped_question, valid_url
 from .rag import resolve_question
 from .question_router import (VERSION as ROUTER_VERSION, MIXED_NOTICE, REPLIES,
-                              RouterConfigurationError, RouterRateLimited, RouterUnavailable, resolve_scope, route_question)
+                              RouterConfigurationError, RouterRateLimited, RouterUnavailable, cutoff_year_missing, is_scope_only,
+                              resolve_scope, route_question)
 
 logging.basicConfig(level=logging.INFO)
 # Do not log HTTP request URLs or credentials.
@@ -161,18 +162,21 @@ def chat(body: ChatInput, sid=Depends(session)):
         ).fetchall()
         previous = conn.execute(
             "SELECT resolved_question,context_year,context_campus FROM messages WHERE session_id=? "
-            "AND role='assistant' AND context_year IS NOT NULL AND context_campus IS NOT NULL "
+            "AND role='assistant' AND resolved_question IS NOT NULL "
             "AND (intent IS NULL OR intent IN ('admissions','unclear')) "
-            'ORDER BY created_at DESC,rowid DESC LIMIT 1', (sid,)
-        ).fetchone()
+            'ORDER BY created_at DESC,rowid DESC LIMIT 32', (sid,)
+        ).fetchall()
     context = [dict(role=row['role'], content=row['content'][:2000],
                     resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'],
                     intent=row['intent'], response_kind=row['response_kind'])
                for row in reversed(recent)]
     intent = response_kind = router_version = None
     if routing_enabled:
-        latest = dict(question=(previous['resolved_question'] or '')[:3000],
-                      year=previous['context_year'], campus=previous['context_campus']) if previous else None
+        # A scope-only clarification must not erase the last meaningful topic.
+        topic = next((row for row in previous if row['resolved_question']
+                      and not is_scope_only(row['resolved_question'])), previous[0] if previous else None)
+        latest = dict(question=(topic['resolved_question'] or '')[:3000],
+                      year=previous[0]['context_year'], campus=previous[0]['context_campus']) if previous else None
         route = route_question(question, context, {'year': body.year, 'campus': body.campus}, latest)
         intent, router_version = route.intent, ROUTER_VERSION
         resolved_text = route.standalone_question or question
@@ -190,9 +194,12 @@ def chat(body: ChatInput, sid=Depends(session)):
             if scope_error or route.action == 'clarify':
                 answer = scope_error or route.clarification
                 response_kind = 'clarification'
+                if cutoff_year_missing(question, route, {'year': body.year, 'campus': body.campus}, latest):
+                    year = None
             else:
                 matches = match_chunks(resolved_text, year, campus, db(), embeddings())
-                answer, sources, supported = generate(resolved_text, matches) if matches else (NO_ANSWER, [], False)
+                answer_question = scoped_question(resolved_text, year, campus)
+                answer, sources, supported = generate(answer_question, matches) if matches else (NO_ANSWER, [], False)
                 response_kind = 'grounded' if supported else 'no_evidence'
                 if route.reason_code == 'mixed_request':
                     answer += '\n\n' + MIXED_NOTICE
@@ -210,7 +217,7 @@ def chat(body: ChatInput, sid=Depends(session)):
             answer, sources, supported = resolved.clarification, [], False
         else:
             matches = match_chunks(resolved.question, year, campus, db(), embeddings())
-            answer, sources, supported = generate(resolved.question, matches) if matches else (NO_ANSWER, [], False)
+            answer, sources, supported = generate(scoped_question(resolved.question, year, campus), matches) if matches else (NO_ANSWER, [], False)
     elapsed = round((time.monotonic() - started) * 1000)
     records = [
         {'session_id': sid, 'role': 'user', 'content': question, 'sources': [], 'question': None, 'supported': None, 'latency_ms': None},
