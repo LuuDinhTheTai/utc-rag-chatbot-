@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import './utc-theme.css';
+import './answer-content.css';
 import Sidebar from '../components/Sidebar';
 import AuthProvider from '../components/AuthProvider';
 import PlannerProvider from '../components/PlannerProvider';

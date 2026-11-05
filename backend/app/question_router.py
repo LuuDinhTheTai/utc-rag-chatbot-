@@ -169,38 +169,48 @@ def route_question(question, history, explicit_scope, latest_context=None):
     started = time.monotonic()
     route = quick_route(question) or scope_followup(question, latest_context)
     method = 'rule' if route else 'model'
+    used_model = None
     if route is None:
         cfg = settings()
         if not cfg.google_api_key:
             raise RouterUnavailable('missing_configuration')
-        try:
-            llm = ChatGoogleGenerativeAI(model=cfg.gemini_model, google_api_key=cfg.google_api_key,
-                                        timeout=cfg.router_timeout_seconds, max_retries=1)
-            result = invoke_gemini(llm.with_structured_output(QuestionRoute), [
-                ('system', SYSTEM_PROMPT),
-                ('human', json.dumps({'question': question, 'history': history[-8:],
-                                     'explicit_scope': explicit_scope, 'latest_context': latest_context}, ensure_ascii=False)),
-            ])
-            route = QuestionRoute.model_validate(result)
-        except GoogleModelNotFoundError as exc:
-            log.warning('router_configuration_failed reason=model_not_found version=%s', VERSION)
-            raise RouterConfigurationError('model_not_found') from exc
-        except (GoogleAuthenticationError, GooglePermissionDeniedError) as exc:
-            raise RouterConfigurationError('credentials_or_permissions') from exc
-        except GoogleInvalidRequestError as exc:
-            raise RouterConfigurationError('invalid_request') from exc
-        except GoogleRateLimitError as exc:
-            raise RouterRateLimited('rate_limited') from exc
-        except APIError as exc:
-            if exc.code == 429:
+        models = list(dict.fromkeys((cfg.routing_model, cfg.gemini_model)))
+        for model_name in models:
+            try:
+                llm = ChatGoogleGenerativeAI(model=model_name, google_api_key=cfg.google_api_key,
+                                            timeout=cfg.router_timeout_seconds, max_retries=1)
+                result = invoke_gemini(llm.with_structured_output(QuestionRoute), [
+                    ('system', SYSTEM_PROMPT),
+                    ('human', json.dumps({'question': question, 'history': history[-8:],
+                                         'explicit_scope': explicit_scope, 'latest_context': latest_context}, ensure_ascii=False)),
+                ])
+                route = QuestionRoute.model_validate(result)
+                used_model = model_name
+                break
+            except GoogleModelNotFoundError as exc:
+                if model_name != models[-1]:
+                    log.warning('router_model_fallback unavailable_model=%s fallback_model=%s version=%s',
+                                model_name, models[-1], VERSION)
+                    continue
+                log.warning('router_configuration_failed reason=model_not_found model=%s version=%s', model_name, VERSION)
+                raise RouterConfigurationError('model_not_found') from exc
+            except (GoogleAuthenticationError, GooglePermissionDeniedError) as exc:
+                raise RouterConfigurationError('credentials_or_permissions') from exc
+            except GoogleInvalidRequestError as exc:
+                raise RouterConfigurationError('invalid_request') from exc
+            except GoogleRateLimitError as exc:
                 raise RouterRateLimited('rate_limited') from exc
-            raise
-        except Exception as exc:
-            log.warning('router_failed type=%s version=%s', type(exc).__name__, VERSION)
-            raise RouterUnavailable('invalid_or_unavailable_response') from exc
+            except APIError as exc:
+                if exc.code == 429:
+                    raise RouterRateLimited('rate_limited') from exc
+                raise
+            except Exception as exc:
+                log.warning('router_failed type=%s version=%s', type(exc).__name__, VERSION)
+                raise RouterUnavailable('invalid_or_unavailable_response') from exc
     route = require_cutoff_year(question, route, explicit_scope, latest_context)
-    log.info('question_routed intent=%s action=%s reason=%s method=%s version=%s latency_ms=%d',
-             route.intent, route.action, route.reason_code, method, VERSION,
+    log.info('question_routed intent=%s action=%s reason=%s method=%s model=%s version=%s latency_ms=%d',
+             route.intent, route.action, route.reason_code, method,
+             used_model, VERSION,
              round((time.monotonic() - started) * 1000))
     return route
 

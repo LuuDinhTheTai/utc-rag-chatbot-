@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     admin_password: str = ''
     google_api_key: str = ''
     gemini_model: str = 'gemini-2.5-flash'
+    router_model: str = ''
     embedding_model: str = 'gemini-embedding-001'
     embedding_dimensions: int = Field(default=768, ge=1, le=3072)
     frontend_origin: str = 'http://localhost:3000'
@@ -21,6 +22,10 @@ class Settings(BaseSettings):
     rate_limit_chat: int = 20
     rate_limit_login: int = 5
     rate_limit_admin_write: int = 30
+
+    @property
+    def routing_model(self):
+        return self.router_model.strip() or self.gemini_model
 
 
 @lru_cache

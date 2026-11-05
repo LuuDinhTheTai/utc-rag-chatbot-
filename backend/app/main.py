@@ -21,6 +21,7 @@ from .localdb import Database, connect
 from .document_duplicates import document_checksum, find_duplicate, matching_sources
 from .web_documents import fetch_web_document
 from .ratelimit import rate_limit_middleware
+from .timing import measure_stage, trace_chat
 from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, scoped_question, valid_url
 from .rag import resolve_question
 from .question_router import (VERSION as ROUTER_VERSION, MIXED_NOTICE, REPLIES,
@@ -113,7 +114,7 @@ async def router_rate_limited(request, exc):
 @app.exception_handler(RouterConfigurationError)
 async def router_configuration_error(request, exc):
     messages = {
-        'model_not_found': 'Model Gemini đang cấu hình không tồn tại hoặc không còn khả dụng với API key này. Quản trị viên cần cập nhật GEMINI_MODEL và khởi động lại backend.',
+        'model_not_found': 'Model định tuyến không tồn tại hoặc không còn khả dụng với API key này. Quản trị viên cần cập nhật ROUTER_MODEL (hoặc GEMINI_MODEL khi chưa đặt model định tuyến) và khởi động lại backend.',
         'credentials_or_permissions': 'API key Gemini không hợp lệ hoặc không có quyền truy cập. Quản trị viên cần kiểm tra khóa và quyền của dự án.',
         'invalid_request': 'Gemini không chấp nhận cấu hình yêu cầu hiện tại. Quản trị viên cần kiểm tra model và cấu hình tích hợp.',
     }
@@ -153,6 +154,7 @@ class ChatInput(BaseModel):
 
 
 @app.post('/chat')
+@trace_chat
 def chat(body: ChatInput, sid=Depends(session)):
     question = body.question.strip()
     if len(question) < 2:
@@ -160,21 +162,22 @@ def chat(body: ChatInput, sid=Depends(session)):
     started = time.monotonic()
     cfg = settings()
     routing_enabled = getattr(cfg, 'question_routing_enabled', False)
-    with connect() as conn:
-        recent = conn.execute(
-            'SELECT role,content,resolved_question,context_year,context_campus,intent,response_kind FROM messages '
-            'WHERE session_id=? ORDER BY created_at DESC,rowid DESC LIMIT 8', (sid,)
-        ).fetchall()
-        previous = conn.execute(
-            "SELECT resolved_question,context_year,context_campus FROM messages WHERE session_id=? "
-            "AND role='assistant' AND resolved_question IS NOT NULL "
-            "AND (intent IS NULL OR intent IN ('admissions','unclear')) "
-            'ORDER BY created_at DESC,rowid DESC LIMIT 32', (sid,)
-        ).fetchall()
-    context = [dict(role=row['role'], content=row['content'][:2000],
-                    resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'],
-                    intent=row['intent'], response_kind=row['response_kind'])
-               for row in reversed(recent)]
+    with measure_stage('history'):
+        with connect() as conn:
+            recent = conn.execute(
+                'SELECT role,content,resolved_question,context_year,context_campus,intent,response_kind FROM messages '
+                'WHERE session_id=? ORDER BY created_at DESC,rowid DESC LIMIT 8', (sid,)
+            ).fetchall()
+            previous = conn.execute(
+                "SELECT resolved_question,context_year,context_campus FROM messages WHERE session_id=? "
+                "AND role='assistant' AND resolved_question IS NOT NULL "
+                "AND (intent IS NULL OR intent IN ('admissions','unclear')) "
+                'ORDER BY created_at DESC,rowid DESC LIMIT 32', (sid,)
+            ).fetchall()
+        context = [dict(role=row['role'], content=row['content'][:2000],
+                        resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'],
+                        intent=row['intent'], response_kind=row['response_kind'])
+                   for row in reversed(recent)]
     intent = response_kind = router_version = None
     if routing_enabled:
         # A scope-only clarification must not erase the last meaningful topic.
@@ -182,7 +185,8 @@ def chat(body: ChatInput, sid=Depends(session)):
                       and not is_scope_only(row['resolved_question'])), previous[0] if previous else None)
         latest = dict(question=(topic['resolved_question'] or '')[:3000],
                       year=previous[0]['context_year'], campus=previous[0]['context_campus']) if previous else None
-        route = route_question(question, context, {'year': body.year, 'campus': body.campus}, latest)
+        with measure_stage('routing'):
+            route = route_question(question, context, {'year': body.year, 'campus': body.campus}, latest)
         intent, router_version = route.intent, ROUTER_VERSION
         resolved_text = route.standalone_question or question
         year = campus = None
@@ -202,9 +206,15 @@ def chat(body: ChatInput, sid=Depends(session)):
                 if cutoff_year_missing(question, route, {'year': body.year, 'campus': body.campus}, latest):
                     year = None
             else:
-                matches = match_chunks(resolved_text, year, campus, db(), embeddings())
+                with measure_stage('embedding_setup'):
+                    embedding_model = embeddings()
+                matches = match_chunks(resolved_text, year, campus, db(), embedding_model)
                 answer_question = scoped_question(resolved_text, year, campus)
-                answer, sources, supported = generate(answer_question, matches) if matches else (NO_ANSWER, [], False)
+                if matches:
+                    with measure_stage('generation'):
+                        answer, sources, supported = generate(answer_question, matches)
+                else:
+                    answer, sources, supported = NO_ANSWER, [], False
                 response_kind = 'grounded' if supported else 'no_evidence'
                 if route.reason_code == 'mixed_request':
                     answer += '\n\n' + MIXED_NOTICE
@@ -216,13 +226,20 @@ def chat(body: ChatInput, sid=Depends(session)):
             raise HTTPException(422, str(exc))
         if not cfg.google_api_key:
             raise HTTPException(503, 'Chưa cấu hình Gemini API trên máy chủ.')
-        resolved = resolve_question(question, context, year, campus)
+        with measure_stage('routing'):
+            resolved = resolve_question(question, context, year, campus)
         resolved_text = resolved.question
         if resolved.clarification:
             answer, sources, supported = resolved.clarification, [], False
         else:
-            matches = match_chunks(resolved.question, year, campus, db(), embeddings())
-            answer, sources, supported = generate(scoped_question(resolved.question, year, campus), matches) if matches else (NO_ANSWER, [], False)
+            with measure_stage('embedding_setup'):
+                embedding_model = embeddings()
+            matches = match_chunks(resolved.question, year, campus, db(), embedding_model)
+            if matches:
+                with measure_stage('generation'):
+                    answer, sources, supported = generate(scoped_question(resolved.question, year, campus), matches)
+            else:
+                answer, sources, supported = NO_ANSWER, [], False
     elapsed = round((time.monotonic() - started) * 1000)
     records = [
         {'session_id': sid, 'role': 'user', 'content': question, 'sources': [], 'question': None, 'supported': None, 'latency_ms': None},
@@ -231,7 +248,8 @@ def chat(body: ChatInput, sid=Depends(session)):
     for record in records:
         record.update(resolved_question=resolved_text, context_year=year, context_campus=campus,
                       intent=intent, response_kind=response_kind, router_version=router_version)
-    rows = db().table('messages').insert(records).execute().data
+    with measure_stage('save'):
+        rows = db().table('messages').insert(records).execute().data
     log.info('chat_completed latency_ms=%d supported=%s', elapsed, supported)
     return next(row for row in rows if row['role'] == 'assistant')
 
