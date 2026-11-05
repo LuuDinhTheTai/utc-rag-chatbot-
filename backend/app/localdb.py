@@ -41,6 +41,8 @@ def connect():
         ensure_conversations(conn)
         from .routing_schema import ensure_routing
         ensure_routing(conn)
+        from .crawler_schema import ensure_crawler
+        ensure_crawler(conn)
         conn.execute('PRAGMA journal_mode=WAL')
         return conn
     except Exception:

@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .auth import router as auth_router, admin, can_edit, owner, optional_account
 from .config import settings
 from .localdb import Database, connect
+from .document_duplicates import find_duplicate, matching_sources
 from .ratelimit import rate_limit_middleware
 from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, scoped_question, valid_url
 from .rag import resolve_question
@@ -30,6 +31,8 @@ logging.getLogger('httpx').setLevel(logging.WARNING)
 log = logging.getLogger('utc')
 app = FastAPI(title='UTC Admissions RAG', version='1.0.0')
 app.include_router(auth_router)
+from .crawler_routes import router as crawler_router
+app.include_router(crawler_router)
 
 
 @lru_cache
@@ -274,6 +277,20 @@ def preview(file: UploadFile | None = File(default=None), url: str = Form(defaul
     except (ValueError, UnicodeError) as exc:
         raise HTTPException(422, str(exc))
     return {'text': text, 'characters': len(text), 'chunks': len(chunks(text))}
+
+
+class DocumentCheck(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    text: str = Field(min_length=30, max_length=2_000_000)
+    admission_year: int = Field(ge=2000, le=2100)
+    campus: Literal['hanoi', 'hcm']
+    source_url: str = Field(default='', max_length=2000)
+
+
+@app.post('/admin/documents/check-duplicate')
+def check_document_duplicate(body: DocumentCheck, uid=Depends(can_edit)):
+    return {'duplicate': find_duplicate(db(), body.text, body.admission_year, body.campus, body.source_url),
+            'existing_sources': matching_sources(db(), body.source_url)}
 
 
 class DocumentInput(BaseModel):
