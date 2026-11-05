@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import secrets
+import sqlite3
 import time
 from functools import lru_cache
 from typing import Literal
@@ -17,7 +18,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .auth import router as auth_router, admin, can_edit, owner, optional_account
 from .config import settings
 from .localdb import Database, connect
-from .document_duplicates import find_duplicate, matching_sources
+from .document_duplicates import document_checksum, find_duplicate, matching_sources
+from .web_documents import fetch_web_document
 from .ratelimit import rate_limit_middleware
 from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, scoped_question, valid_url
 from .rag import resolve_question
@@ -266,17 +268,30 @@ def ingest(document_id, text):
 
 
 @app.post('/admin/documents/preview')
-def preview(file: UploadFile | None = File(default=None), url: str = Form(default=''), uid=Depends(can_edit)):
+def preview(file: UploadFile | None = File(default=None), url: str = Form(default=''),
+            admission_year: int = Form(default=2026, ge=2000, le=2100),
+            campus: Literal['hanoi', 'hcm'] = Form(default='hanoi'),
+            ocr: bool = Form(default=False), uid=Depends(can_edit)):
+    details = {'ocr_used': False, 'warnings': [], 'resources': []}
     try:
+        url = url.strip()
+        if file and url:
+            raise ValueError('Chỉ chọn một nguồn: URL web hoặc tệp tải lên.')
         if file:
             text = extract(file.file.read(MAX_BYTES+1), file.filename or '')
         elif url:
-            text = fetch_url(url)
+            if ocr:
+                details = fetch_web_document(url, ocr=True)
+                text = details.pop('text')
+            else:
+                text = fetch_url(url)
         else:
             raise ValueError('Chọn tệp hoặc nhập URL.')
     except (ValueError, UnicodeError) as exc:
         raise HTTPException(422, str(exc))
-    return {'text': text, 'characters': len(text), 'chunks': len(chunks(text))}
+    return {'text': text, 'characters': len(text), 'chunks': len(chunks(text)),
+            'duplicate': find_duplicate(db(), text, admission_year, campus, url),
+            'existing_sources': matching_sources(db(), url), **details}
 
 
 class DocumentCheck(BaseModel):
@@ -296,7 +311,7 @@ def check_document_duplicate(body: DocumentCheck, uid=Depends(can_edit)):
 class DocumentInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     title: str = Field(min_length=3, max_length=300)
-    source_url: str = Field(max_length=2000)
+    source_url: str = Field(default='', max_length=2000)
     admission_year: int = Field(ge=2000, le=2100)
     campus: Literal['hanoi', 'hcm']
     category: str = Field(default='tuyen-sinh', max_length=100)
@@ -308,12 +323,16 @@ STORAGE_BUCKET = 'admission-documents'
 
 def persist_document(body, tasks, uid, original=None):
     try:
-        valid_url(body.source_url)
+        if body.source_url or not original:
+            valid_url(body.source_url)
     except ValueError as exc:
         raise HTTPException(422, str(exc))
-    checksum = hashlib.sha256(f'{body.admission_year}:{body.campus}:{body.text}'.encode()).hexdigest()
-    if db().table('documents').select('id').eq('checksum', checksum).execute().data:
-        raise HTTPException(409, 'Tài liệu này đã tồn tại cho năm và cơ sở đã chọn.')
+    checksum = document_checksum(body.text, body.admission_year, body.campus)
+    duplicate = find_duplicate(db(), body.text, body.admission_year, body.campus, body.source_url)
+    if duplicate:
+        reason = ('URL nguồn đã có ở' if duplicate['reason'] == 'source_url' else
+                  'Nội dung gần trùng với' if duplicate['reason'] == 'near_content' else 'Nội dung trùng với')
+        raise HTTPException(409, f'{reason} tài liệu “{duplicate["title"]}” trong năm và cơ sở đã chọn. Không thêm bản trùng.')
     document_id = str(uuid4())
     values = body.model_dump(exclude={'text'}) | {'id': document_id, 'raw_text': body.text, 'checksum': checksum, 'status': 'processing', 'created_by': uid}
     path = None
@@ -325,12 +344,14 @@ def persist_document(body, tasks, uid, original=None):
         values.update(storage_path=path, original_filename=filename, original_size=len(data))
     try:
         row = db().table('documents').insert(values).execute().data[0]
-    except Exception:
+    except Exception as exc:
         if path:
             try:
                 db().storage.from_(STORAGE_BUCKET).remove([path])
             except Exception:
                 log.error('storage_cleanup_failed document_id=%s', document_id)
+        if isinstance(exc, sqlite3.IntegrityError) and 'documents.checksum' in str(exc):
+            raise HTTPException(409, 'Tài liệu này vừa được thêm cho năm và cơ sở đã chọn. Không thêm bản trùng.') from exc
         raise
     tasks.add_task(ingest, row['id'], body.text)
     return {'id': row['id'], 'status': row['status']}

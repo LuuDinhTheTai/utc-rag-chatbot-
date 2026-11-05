@@ -222,6 +222,19 @@
 .crawler-editor>label.crawler-checkbox{flex-direction:row;align-items:center}
 .crawler-editor textarea{width:100%;box-sizing:border-box}
 .crawler-original{white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto;font:inherit;line-height:1.6}
+.manual-upload-fields{border:0;margin:0;padding:0;min-width:0}
+.manual-upload-fields>legend{font-size:12px;font-weight:600;margin-bottom:12px}
+.document-source-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.panel .document-source-options>label{flex-direction:row;align-items:flex-start;padding:16px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.document-source-options>label.is-selected{background:var(--selected);border-color:var(--primary)}
+.document-source-options input{margin:3px 4px 0 0;accent-color:var(--primary)}
+.document-source-options strong,.document-source-options small{display:block;line-height:1.7}
+.document-source-options small{margin-top:5px;color:var(--muted)}
+.manual-upload .preview textarea{width:100%}
+.panel .manual-ocr-option>label{flex-direction:row;align-items:center;margin-top:20px}
+.manual-ocr-option input{accent-color:var(--primary)}
+.manual-upload .error{overflow-wrap:anywhere}
+@media(max-width:680px){.document-source-options{grid-template-columns:1fr}}
 @media(max-width:800px){
   .crawler-review{display:flex;flex-direction:column}
   .crawler-review-list,.crawler-review-detail{width:100%;box-sizing:border-box}
