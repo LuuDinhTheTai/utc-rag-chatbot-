@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import secrets
+import sqlite3
 import time
 from functools import lru_cache
 from typing import Literal
@@ -17,11 +18,15 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .auth import router as auth_router, admin, can_edit, owner, optional_account
 from .config import settings
 from .localdb import Database, connect
+from .document_duplicates import document_checksum, find_duplicate, matching_sources
+from .web_documents import fetch_web_document
 from .ratelimit import rate_limit_middleware
-from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, valid_url
+from .timing import measure_stage, trace_chat
+from .rag import MAX_BYTES, NO_ANSWER, chunks, embeddings, extract, fetch_url, filters, generate, match_chunks, scoped_question, valid_url
 from .rag import resolve_question
 from .question_router import (VERSION as ROUTER_VERSION, MIXED_NOTICE, REPLIES,
-                              RouterConfigurationError, RouterRateLimited, RouterUnavailable, resolve_scope, route_question)
+                              RouterConfigurationError, RouterRateLimited, RouterUnavailable, cutoff_year_missing, is_scope_only,
+                              resolve_scope, route_question)
 
 logging.basicConfig(level=logging.INFO)
 # Do not log HTTP request URLs or credentials.
@@ -29,6 +34,8 @@ logging.getLogger('httpx').setLevel(logging.WARNING)
 log = logging.getLogger('utc')
 app = FastAPI(title='UTC Admissions RAG', version='1.0.0')
 app.include_router(auth_router)
+from .crawler_routes import router as crawler_router
+app.include_router(crawler_router)
 
 
 @lru_cache
@@ -107,7 +114,7 @@ async def router_rate_limited(request, exc):
 @app.exception_handler(RouterConfigurationError)
 async def router_configuration_error(request, exc):
     messages = {
-        'model_not_found': 'Model Gemini đang cấu hình không tồn tại hoặc không còn khả dụng với API key này. Quản trị viên cần cập nhật GEMINI_MODEL và khởi động lại backend.',
+        'model_not_found': 'Model định tuyến không tồn tại hoặc không còn khả dụng với API key này. Quản trị viên cần cập nhật ROUTER_MODEL (hoặc GEMINI_MODEL khi chưa đặt model định tuyến) và khởi động lại backend.',
         'credentials_or_permissions': 'API key Gemini không hợp lệ hoặc không có quyền truy cập. Quản trị viên cần kiểm tra khóa và quyền của dự án.',
         'invalid_request': 'Gemini không chấp nhận cấu hình yêu cầu hiện tại. Quản trị viên cần kiểm tra model và cấu hình tích hợp.',
     }
@@ -147,6 +154,7 @@ class ChatInput(BaseModel):
 
 
 @app.post('/chat')
+@trace_chat
 def chat(body: ChatInput, sid=Depends(session)):
     question = body.question.strip()
     if len(question) < 2:
@@ -154,26 +162,31 @@ def chat(body: ChatInput, sid=Depends(session)):
     started = time.monotonic()
     cfg = settings()
     routing_enabled = getattr(cfg, 'question_routing_enabled', False)
-    with connect() as conn:
-        recent = conn.execute(
-            'SELECT role,content,resolved_question,context_year,context_campus,intent,response_kind FROM messages '
-            'WHERE session_id=? ORDER BY created_at DESC,rowid DESC LIMIT 8', (sid,)
-        ).fetchall()
-        previous = conn.execute(
-            "SELECT resolved_question,context_year,context_campus FROM messages WHERE session_id=? "
-            "AND role='assistant' AND context_year IS NOT NULL AND context_campus IS NOT NULL "
-            "AND (intent IS NULL OR intent IN ('admissions','unclear')) "
-            'ORDER BY created_at DESC,rowid DESC LIMIT 1', (sid,)
-        ).fetchone()
-    context = [dict(role=row['role'], content=row['content'][:2000],
-                    resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'],
-                    intent=row['intent'], response_kind=row['response_kind'])
-               for row in reversed(recent)]
+    with measure_stage('history'):
+        with connect() as conn:
+            recent = conn.execute(
+                'SELECT role,content,resolved_question,context_year,context_campus,intent,response_kind FROM messages '
+                'WHERE session_id=? ORDER BY created_at DESC,rowid DESC LIMIT 8', (sid,)
+            ).fetchall()
+            previous = conn.execute(
+                "SELECT resolved_question,context_year,context_campus FROM messages WHERE session_id=? "
+                "AND role='assistant' AND resolved_question IS NOT NULL "
+                "AND (intent IS NULL OR intent IN ('admissions','unclear')) "
+                'ORDER BY created_at DESC,rowid DESC LIMIT 32', (sid,)
+            ).fetchall()
+        context = [dict(role=row['role'], content=row['content'][:2000],
+                        resolved_question=row['resolved_question'], year=row['context_year'], campus=row['context_campus'],
+                        intent=row['intent'], response_kind=row['response_kind'])
+                   for row in reversed(recent)]
     intent = response_kind = router_version = None
     if routing_enabled:
-        latest = dict(question=(previous['resolved_question'] or '')[:3000],
-                      year=previous['context_year'], campus=previous['context_campus']) if previous else None
-        route = route_question(question, context, {'year': body.year, 'campus': body.campus}, latest)
+        # A scope-only clarification must not erase the last meaningful topic.
+        topic = next((row for row in previous if row['resolved_question']
+                      and not is_scope_only(row['resolved_question'])), previous[0] if previous else None)
+        latest = dict(question=(topic['resolved_question'] or '')[:3000],
+                      year=previous[0]['context_year'], campus=previous[0]['context_campus']) if previous else None
+        with measure_stage('routing'):
+            route = route_question(question, context, {'year': body.year, 'campus': body.campus}, latest)
         intent, router_version = route.intent, ROUTER_VERSION
         resolved_text = route.standalone_question or question
         year = campus = None
@@ -190,9 +203,18 @@ def chat(body: ChatInput, sid=Depends(session)):
             if scope_error or route.action == 'clarify':
                 answer = scope_error or route.clarification
                 response_kind = 'clarification'
+                if cutoff_year_missing(question, route, {'year': body.year, 'campus': body.campus}, latest):
+                    year = None
             else:
-                matches = match_chunks(resolved_text, year, campus, db(), embeddings())
-                answer, sources, supported = generate(resolved_text, matches) if matches else (NO_ANSWER, [], False)
+                with measure_stage('embedding_setup'):
+                    embedding_model = embeddings()
+                matches = match_chunks(resolved_text, year, campus, db(), embedding_model)
+                answer_question = scoped_question(resolved_text, year, campus)
+                if matches:
+                    with measure_stage('generation'):
+                        answer, sources, supported = generate(answer_question, matches)
+                else:
+                    answer, sources, supported = NO_ANSWER, [], False
                 response_kind = 'grounded' if supported else 'no_evidence'
                 if route.reason_code == 'mixed_request':
                     answer += '\n\n' + MIXED_NOTICE
@@ -204,13 +226,20 @@ def chat(body: ChatInput, sid=Depends(session)):
             raise HTTPException(422, str(exc))
         if not cfg.google_api_key:
             raise HTTPException(503, 'Chưa cấu hình Gemini API trên máy chủ.')
-        resolved = resolve_question(question, context, year, campus)
+        with measure_stage('routing'):
+            resolved = resolve_question(question, context, year, campus)
         resolved_text = resolved.question
         if resolved.clarification:
             answer, sources, supported = resolved.clarification, [], False
         else:
-            matches = match_chunks(resolved.question, year, campus, db(), embeddings())
-            answer, sources, supported = generate(resolved.question, matches) if matches else (NO_ANSWER, [], False)
+            with measure_stage('embedding_setup'):
+                embedding_model = embeddings()
+            matches = match_chunks(resolved.question, year, campus, db(), embedding_model)
+            if matches:
+                with measure_stage('generation'):
+                    answer, sources, supported = generate(scoped_question(resolved.question, year, campus), matches)
+            else:
+                answer, sources, supported = NO_ANSWER, [], False
     elapsed = round((time.monotonic() - started) * 1000)
     records = [
         {'session_id': sid, 'role': 'user', 'content': question, 'sources': [], 'question': None, 'supported': None, 'latency_ms': None},
@@ -219,7 +248,8 @@ def chat(body: ChatInput, sid=Depends(session)):
     for record in records:
         record.update(resolved_question=resolved_text, context_year=year, context_campus=campus,
                       intent=intent, response_kind=response_kind, router_version=router_version)
-    rows = db().table('messages').insert(records).execute().data
+    with measure_stage('save'):
+        rows = db().table('messages').insert(records).execute().data
     log.info('chat_completed latency_ms=%d supported=%s', elapsed, supported)
     return next(row for row in rows if row['role'] == 'assistant')
 
@@ -256,23 +286,50 @@ def ingest(document_id, text):
 
 
 @app.post('/admin/documents/preview')
-def preview(file: UploadFile | None = File(default=None), url: str = Form(default=''), uid=Depends(can_edit)):
+def preview(file: UploadFile | None = File(default=None), url: str = Form(default=''),
+            admission_year: int = Form(default=2026, ge=2000, le=2100),
+            campus: Literal['hanoi', 'hcm'] = Form(default='hanoi'),
+            ocr: bool = Form(default=False), uid=Depends(can_edit)):
+    details = {'ocr_used': False, 'warnings': [], 'resources': []}
     try:
+        url = url.strip()
+        if file and url:
+            raise ValueError('Chỉ chọn một nguồn: URL web hoặc tệp tải lên.')
         if file:
             text = extract(file.file.read(MAX_BYTES+1), file.filename or '')
         elif url:
-            text = fetch_url(url)
+            if ocr:
+                details = fetch_web_document(url, ocr=True)
+                text = details.pop('text')
+            else:
+                text = fetch_url(url)
         else:
             raise ValueError('Chọn tệp hoặc nhập URL.')
     except (ValueError, UnicodeError) as exc:
         raise HTTPException(422, str(exc))
-    return {'text': text, 'characters': len(text), 'chunks': len(chunks(text))}
+    return {'text': text, 'characters': len(text), 'chunks': len(chunks(text)),
+            'duplicate': find_duplicate(db(), text, admission_year, campus, url),
+            'existing_sources': matching_sources(db(), url), **details}
+
+
+class DocumentCheck(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    text: str = Field(min_length=30, max_length=2_000_000)
+    admission_year: int = Field(ge=2000, le=2100)
+    campus: Literal['hanoi', 'hcm']
+    source_url: str = Field(default='', max_length=2000)
+
+
+@app.post('/admin/documents/check-duplicate')
+def check_document_duplicate(body: DocumentCheck, uid=Depends(can_edit)):
+    return {'duplicate': find_duplicate(db(), body.text, body.admission_year, body.campus, body.source_url),
+            'existing_sources': matching_sources(db(), body.source_url)}
 
 
 class DocumentInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     title: str = Field(min_length=3, max_length=300)
-    source_url: str = Field(max_length=2000)
+    source_url: str = Field(default='', max_length=2000)
     admission_year: int = Field(ge=2000, le=2100)
     campus: Literal['hanoi', 'hcm']
     category: str = Field(default='tuyen-sinh', max_length=100)
@@ -284,12 +341,16 @@ STORAGE_BUCKET = 'admission-documents'
 
 def persist_document(body, tasks, uid, original=None):
     try:
-        valid_url(body.source_url)
+        if body.source_url or not original:
+            valid_url(body.source_url)
     except ValueError as exc:
         raise HTTPException(422, str(exc))
-    checksum = hashlib.sha256(f'{body.admission_year}:{body.campus}:{body.text}'.encode()).hexdigest()
-    if db().table('documents').select('id').eq('checksum', checksum).execute().data:
-        raise HTTPException(409, 'Tài liệu này đã tồn tại cho năm và cơ sở đã chọn.')
+    checksum = document_checksum(body.text, body.admission_year, body.campus)
+    duplicate = find_duplicate(db(), body.text, body.admission_year, body.campus, body.source_url)
+    if duplicate:
+        reason = ('URL nguồn đã có ở' if duplicate['reason'] == 'source_url' else
+                  'Nội dung gần trùng với' if duplicate['reason'] == 'near_content' else 'Nội dung trùng với')
+        raise HTTPException(409, f'{reason} tài liệu “{duplicate["title"]}” trong năm và cơ sở đã chọn. Không thêm bản trùng.')
     document_id = str(uuid4())
     values = body.model_dump(exclude={'text'}) | {'id': document_id, 'raw_text': body.text, 'checksum': checksum, 'status': 'processing', 'created_by': uid}
     path = None
@@ -301,12 +362,14 @@ def persist_document(body, tasks, uid, original=None):
         values.update(storage_path=path, original_filename=filename, original_size=len(data))
     try:
         row = db().table('documents').insert(values).execute().data[0]
-    except Exception:
+    except Exception as exc:
         if path:
             try:
                 db().storage.from_(STORAGE_BUCKET).remove([path])
             except Exception:
                 log.error('storage_cleanup_failed document_id=%s', document_id)
+        if isinstance(exc, sqlite3.IntegrityError) and 'documents.checksum' in str(exc):
+            raise HTTPException(409, 'Tài liệu này vừa được thêm cho năm và cơ sở đã chọn. Không thêm bản trùng.') from exc
         raise
     tasks.add_task(ingest, row['id'], body.text)
     return {'id': row['id'], 'status': row['status']}

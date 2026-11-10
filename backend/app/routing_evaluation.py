@@ -95,7 +95,7 @@ def evaluate(dataset, *, live=False, split=None):
     return {
         'version': 1, 'router_version': VERSION, 'mode': 'live' if live else 'rules_only',
         'complete': live and len(evaluated) == len(rows) and not any(r['error'] for r in rows),
-        'model': settings().gemini_model if live else None,
+        'model': settings().routing_model if live else None,
         'dataset_sha256': hashlib.sha256(dataset.model_dump_json().encode()).hexdigest(),
         'summary': {'cases': len(rows), 'evaluated': len(evaluated), 'skipped': len(rows) - len(evaluated),
                     'errors': sum(bool(r['error']) for r in rows),

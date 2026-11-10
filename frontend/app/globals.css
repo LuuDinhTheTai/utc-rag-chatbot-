@@ -189,3 +189,56 @@
 .nav-active{font-weight:600;box-shadow:inset 3px 0 0 var(--primary)}
 .composer button:hover,.primary:hover{background:var(--primary-hover)}
 ::selection{background:var(--selected);color:var(--primary)}
+
+.crawler-controls{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:18px 0}
+.crawler-controls>label:first-child{display:flex;flex-direction:column;gap:6px}
+.crawler-controls .crawler-checkbox{display:flex;align-items:center;gap:8px;align-self:center}
+.crawler-checkbox input{width:auto;margin:0}
+.crawler-summary{display:flex;flex-direction:column;gap:8px;padding:16px 0;border-top:1px solid var(--line)}
+.utc-crawler details{margin-top:12px}
+.utc-crawler summary{cursor:pointer;font-weight:600}
+.utc-crawler a{color:var(--primary);text-decoration:underline;text-underline-offset:2px}
+.crawler-review{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);gap:24px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line);align-items:start}
+.crawler-review-list{grid-column:2;grid-row:1;min-width:0;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.crawler-review-detail{grid-column:1;grid-row:1;min-width:0;min-height:480px}
+.crawler-review h3{margin-top:0}
+.crawler-candidates{display:grid;grid-auto-rows:max-content;align-content:start;gap:10px;max-height:740px;overflow-y:auto;padding:3px}
+.crawler-candidate{display:flex;flex:none;flex-direction:column;gap:8px;min-width:0;width:100%;height:auto;padding:14px;text-align:left;white-space:normal;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--line);border-radius:8px;font:inherit;color:inherit}
+.crawler-candidate>strong{line-height:1.5}
+.crawler-candidate>*{flex-shrink:0;max-width:100%}
+.crawler-candidate:hover{background:var(--selected)}
+.crawler-candidate.is-selected{border-color:var(--primary);background:var(--selected)}
+.crawler-candidate:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.crawler-candidate span,.crawler-candidate small{font-size:12px;line-height:1.6}
+.crawler-candidate-preview{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.crawler-review-list>.row-actions{margin-top:16px;flex-wrap:wrap}
+.crawler-review-list>label{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.crawler-review-list>label select{min-width:0;max-width:100%}
+.crawler-selection-hint{padding:48px 24px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);line-height:1.7}
+.crawler-editor{padding:20px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.crawler-editor h4{margin:0 0 14px;overflow-wrap:anywhere}
+.crawler-editor .form-grid{margin-top:16px}
+.crawler-editor>label{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.crawler-editor>label.crawler-checkbox{flex-direction:row;align-items:center}
+.crawler-editor textarea{width:100%;box-sizing:border-box}
+.crawler-original{white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto;font:inherit;line-height:1.6}
+.manual-upload-fields{border:0;margin:0;padding:0;min-width:0}
+.manual-upload-fields>legend{font-size:12px;font-weight:600;margin-bottom:12px}
+.document-source-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.panel .document-source-options>label{flex-direction:row;align-items:flex-start;padding:16px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.document-source-options>label.is-selected{background:var(--selected);border-color:var(--primary)}
+.document-source-options input{margin:3px 4px 0 0;accent-color:var(--primary)}
+.document-source-options strong,.document-source-options small{display:block;line-height:1.7}
+.document-source-options small{margin-top:5px;color:var(--muted)}
+.manual-upload .preview textarea{width:100%}
+.panel .manual-ocr-option>label{flex-direction:row;align-items:center;margin-top:20px}
+.manual-ocr-option input{accent-color:var(--primary)}
+.manual-upload .error{overflow-wrap:anywhere}
+@media(max-width:680px){.document-source-options{grid-template-columns:1fr}}
+@media(max-width:800px){
+  .crawler-review{display:flex;flex-direction:column}
+  .crawler-review-list,.crawler-review-detail{width:100%;box-sizing:border-box}
+  .crawler-candidates{max-height:360px}
+  .crawler-review-detail{min-height:0}
+  .crawler-selection-hint{padding:24px}
+}

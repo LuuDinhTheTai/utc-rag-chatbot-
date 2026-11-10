@@ -12,6 +12,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from .config import settings
+from .document_scope import document_years
 from .v2store import relation, write
 
 
@@ -40,6 +41,8 @@ def connect():
         ensure_conversations(conn)
         from .routing_schema import ensure_routing
         ensure_routing(conn)
+        from .crawler_schema import ensure_crawler
+        ensure_crawler(conn)
         conn.execute('PRAGMA journal_mode=WAL')
         return conn
     except Exception:
@@ -235,7 +238,10 @@ class RPC:
             a = self.args
             with connect() as conn:
                 from .v2store import model_id
-                rows = conn.execute('SELECT c.id,c.document_id,c.content,e.vector AS embedding,d.title,d.source_url,d.admission_year,d.campus_code AS campus FROM document_chunks c JOIN chunk_embeddings e ON e.chunk_id=c.id JOIN documents d ON d.id=c.document_id WHERE d.status=? AND d.admission_year=? AND d.campus_code=? AND e.model_id=?', ('ready', a['filter_year'], a['filter_campus'], model_id())).fetchall()
+                conn.create_function('covers_year', 3,
+                                     lambda title, year, requested: requested in document_years(title, year),
+                                     deterministic=True)
+                rows = conn.execute('SELECT c.id,c.document_id,c.content,e.vector AS embedding,d.title,d.source_url,d.admission_year,d.campus_code AS campus FROM document_chunks c JOIN chunk_embeddings e ON e.chunk_id=c.id JOIN documents d ON d.id=c.document_id WHERE d.status=? AND covers_year(d.title,d.admission_year,?) AND d.campus_code=? AND e.model_id=?', ('ready', a['filter_year'], a['filter_campus'], model_id())).fetchall()
             query = a['query_embedding']
             if len(query) != settings().embedding_dimensions:
                 raise ValueError('Query embedding dimensions do not match configured model')
@@ -247,7 +253,8 @@ class RPC:
                 denominator = norm * math.sqrt(sum(x*x for x in vector))
                 score = sum(x*y for x,y in zip(query,vector)) / denominator if denominator else 0
                 if score >= a['min_similarity']:
-                    result.append(item | {'similarity': score})
+                    result.append(item | {'similarity': score,
+                                          'coverage_years': document_years(item['title'], item['admission_year'])})
             result.sort(key=lambda item: item['similarity'], reverse=True)
             return Result(result[:a['match_count']])
         if self.name == 'save_major':

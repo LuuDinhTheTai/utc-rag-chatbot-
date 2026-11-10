@@ -6,10 +6,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('utc-auth-token') : null;
   if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
-  const response = await fetch(`${API}${path}`, {cache:'no-store', ...init, headers, signal: AbortSignal.timeout(120000)});
+  const response = await fetch(`${API}${path}`, {cache:'no-store', ...init, headers, signal: init.signal ?? AbortSignal.timeout(120000)});
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const labels: Record<string, string> = {admission_code: 'Mã xét tuyển', major_code: 'Mã ngành', name: 'Tên ngành', program_name: 'Tên chương trình', quota: 'Chỉ tiêu', methods: 'Phương thức', subject_groups: 'Tổ hợp môn', title: 'Tiêu đề', source_url: 'URL nguồn', admission_year: 'Năm tuyển sinh', campus: 'Cơ sở', text: 'Nội dung', category: 'Loại tài liệu'};
+    const labels: Record<string, string> = {admission_code: 'Mã xét tuyển', major_code: 'Mã ngành', name: 'Tên ngành', program_name: 'Tên chương trình', quota: 'Chỉ tiêu', methods: 'Phương thức', subject_groups: 'Tổ hợp môn', title: 'Tiêu đề', source_url: 'URL nguồn', admission_year: 'Năm tuyển sinh', year: 'Năm áp dụng', confirmed: 'Xác nhận đối chiếu nguồn', campus: 'Cơ sở', text: 'Nội dung', category: 'Loại tài liệu'};
     const detail = body?.detail;
     const message = typeof detail === 'string' ? detail : Array.isArray(detail)
       ? detail.map((item: {loc?: (string | number)[]; msg?: string; type?: string; ctx?: Record<string, number>}) => {
