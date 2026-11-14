@@ -1,0 +1,445 @@
+{
+  "generatedAt": "2026-11-13T17:32:03.943Z",
+  "crawlerVersion": "v1.0.0",
+  "hashAlgorithm": "SHA-256",
+  "implementation": "Node.js crypto.createHash + JSON.stringify",
+  "testVectors": [
+    {
+      "name": "Vector 1: Minimal job with nulls",
+      "vectorNumber": 1,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-1",
+        "type": "job",
+        "title": "Test Job",
+        "url": "https://example.com/job",
+        "company": {
+          "name": null,
+          "url": null,
+          "logo": null
+        },
+        "salary": null,
+        "location": null,
+        "experience": null,
+        "tags": [],
+        "remainingTags": null,
+        "published": {
+          "raw": null,
+          "publishedAt": null
+        }
+      },
+      "content": {
+        "type": "job",
+        "title": "Test Job",
+        "url": "https://example.com/job",
+        "company": {
+          "name": null,
+          "url": null
+        },
+        "salary": null,
+        "location": null,
+        "experience": null,
+        "tags": [],
+        "remainingTags": []
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Test Job\",\"url\":\"https://example.com/job\",\"company\":{\"name\":null,\"url\":null},\"salary\":null,\"location\":null,\"experience\":null,\"tags\":[],\"remainingTags\":[]}",
+      "sha256": "b31707dc2195b6f5a053e87584e8e67821575a26e5ad52ab3b22f0cc667bc9cf",
+      "notes": []
+    },
+    {
+      "name": "Vector 2: Unicode Vietnamese",
+      "vectorNumber": 2,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-2",
+        "type": "job",
+        "title": "Backend Developer - Hà Nội",
+        "url": "https://example.com/job",
+        "company": {
+          "name": "Công ty TNHH Công nghệ ABC",
+          "url": "https://example.com/company",
+          "logo": "https://example.com/logo.png"
+        },
+        "salary": {
+          "raw": "15-25 triệu",
+          "min": null,
+          "max": null,
+          "currency": null,
+          "unit": null
+        },
+        "location": {
+          "raw": "Hà Nội"
+        },
+        "experience": {
+          "raw": "2-3 năm"
+        },
+        "tags": [
+          "Python",
+          "FastAPI",
+          "PostgreSQL"
+        ],
+        "remainingTags": "+3: Docker, CI/CD, AWS",
+        "published": {
+          "raw": "Đăng 2 ngày trước",
+          "publishedAt": null
+        }
+      },
+      "content": {
+        "type": "job",
+        "title": "Backend Developer - Hà Nội",
+        "url": "https://example.com/job",
+        "company": {
+          "name": "Công ty TNHH Công nghệ ABC",
+          "url": "https://example.com/company"
+        },
+        "salary": {
+          "raw": "15-25 triệu",
+          "min": null,
+          "max": null,
+          "currency": null,
+          "unit": null
+        },
+        "location": {
+          "raw": "Hà Nội"
+        },
+        "experience": {
+          "raw": "2-3 năm"
+        },
+        "tags": [
+          "Python",
+          "FastAPI",
+          "PostgreSQL"
+        ],
+        "remainingTags": "+3: Docker, CI/CD, AWS"
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Backend Developer - Hà Nội\",\"url\":\"https://example.com/job\",\"company\":{\"name\":\"Công ty TNHH Công nghệ ABC\",\"url\":\"https://example.com/company\"},\"salary\":{\"raw\":\"15-25 triệu\",\"min\":null,\"max\":null,\"currency\":null,\"unit\":null},\"location\":{\"raw\":\"Hà Nội\"},\"experience\":{\"raw\":\"2-3 năm\"},\"tags\":[\"Python\",\"FastAPI\",\"PostgreSQL\"],\"remainingTags\":\"+3: Docker, CI/CD, AWS\"}",
+      "sha256": "bcdfe9e0710ba80b9b7dfc6cd69903bc70c41d5d89dcbe98f3be2841dd8ab9c4",
+      "notes": []
+    },
+    {
+      "name": "Vector 3: Empty arrays vs null",
+      "vectorNumber": 3,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-3",
+        "type": "job",
+        "title": "Test Empty",
+        "url": null,
+        "company": {
+          "name": null,
+          "url": null,
+          "logo": null
+        },
+        "salary": null,
+        "location": null,
+        "experience": null,
+        "tags": [],
+        "remainingTags": null,
+        "published": {
+          "raw": null,
+          "publishedAt": null
+        }
+      },
+      "content": {
+        "type": "job",
+        "title": "Test Empty",
+        "url": null,
+        "company": {
+          "name": null,
+          "url": null
+        },
+        "salary": null,
+        "location": null,
+        "experience": null,
+        "tags": [],
+        "remainingTags": []
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Test Empty\",\"url\":null,\"company\":{\"name\":null,\"url\":null},\"salary\":null,\"location\":null,\"experience\":null,\"tags\":[],\"remainingTags\":[]}",
+      "sha256": "8f3e083471607872073b904b5799612d8ab837f501fa9cd58387b6d44c6be59a",
+      "notes": []
+    },
+    {
+      "name": "Vector 4: remainingTags as string",
+      "vectorNumber": 4,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-4",
+        "type": "job",
+        "title": "Test Tags",
+        "url": "https://example.com",
+        "company": {
+          "name": "Company",
+          "url": null,
+          "logo": null
+        },
+        "salary": null,
+        "location": null,
+        "experience": null,
+        "tags": [
+          "Java",
+          "Spring"
+        ],
+        "remainingTags": "+5 more",
+        "published": {
+          "raw": "Today",
+          "publishedAt": null
+        }
+      },
+      "content": {
+        "type": "job",
+        "title": "Test Tags",
+        "url": "https://example.com",
+        "company": {
+          "name": "Company",
+          "url": null
+        },
+        "salary": null,
+        "location": null,
+        "experience": null,
+        "tags": [
+          "Java",
+          "Spring"
+        ],
+        "remainingTags": "+5 more"
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Test Tags\",\"url\":\"https://example.com\",\"company\":{\"name\":\"Company\",\"url\":null},\"salary\":null,\"location\":null,\"experience\":null,\"tags\":[\"Java\",\"Spring\"],\"remainingTags\":\"+5 more\"}",
+      "sha256": "d2f1f527c2b76d73cbdade41e1b75385112ca080b22faef9303ab2354f5d8d51",
+      "notes": []
+    },
+    {
+      "name": "Vector 5: Missing optional fields",
+      "vectorNumber": 5,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-5",
+        "type": "job",
+        "title": "Minimal",
+        "url": "https://example.com",
+        "company": {},
+        "tags": [],
+        "published": {}
+      },
+      "content": {
+        "type": "job",
+        "title": "Minimal",
+        "url": "https://example.com",
+        "company": {
+          "name": null,
+          "url": null
+        },
+        "salary": null,
+        "location": null,
+        "experience": null,
+        "tags": [],
+        "remainingTags": []
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Minimal\",\"url\":\"https://example.com\",\"company\":{\"name\":null,\"url\":null},\"salary\":null,\"location\":null,\"experience\":null,\"tags\":[],\"remainingTags\":[]}",
+      "sha256": "dd14d7ed756c2a11e117f7d20df3ca5e927898030dca2dca33f172dff3b40cff",
+      "notes": []
+    },
+    {
+      "name": "Vector 6: Company with all fields",
+      "vectorNumber": 6,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-6",
+        "type": "job",
+        "title": "Full Company",
+        "url": "https://example.com",
+        "company": {
+          "name": "Full Company Name",
+          "url": "https://company.com",
+          "logo": "https://logo.com/image.png"
+        },
+        "salary": {
+          "raw": "1000-2000 USD",
+          "min": 1000,
+          "max": 2000,
+          "currency": "USD",
+          "unit": "month"
+        },
+        "location": {
+          "raw": "Ho Chi Minh City"
+        },
+        "experience": {
+          "raw": "3-5 years"
+        },
+        "tags": [
+          "Node.js",
+          "React",
+          "TypeScript",
+          "MongoDB"
+        ],
+        "remainingTags": null,
+        "published": {
+          "raw": "3 days ago",
+          "publishedAt": "2026-11-10T08:00:00Z"
+        }
+      },
+      "content": {
+        "type": "job",
+        "title": "Full Company",
+        "url": "https://example.com",
+        "company": {
+          "name": "Full Company Name",
+          "url": "https://company.com"
+        },
+        "salary": {
+          "raw": "1000-2000 USD",
+          "min": 1000,
+          "max": 2000,
+          "currency": "USD",
+          "unit": "month"
+        },
+        "location": {
+          "raw": "Ho Chi Minh City"
+        },
+        "experience": {
+          "raw": "3-5 years"
+        },
+        "tags": [
+          "Node.js",
+          "React",
+          "TypeScript",
+          "MongoDB"
+        ],
+        "remainingTags": []
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Full Company\",\"url\":\"https://example.com\",\"company\":{\"name\":\"Full Company Name\",\"url\":\"https://company.com\"},\"salary\":{\"raw\":\"1000-2000 USD\",\"min\":1000,\"max\":2000,\"currency\":\"USD\",\"unit\":\"month\"},\"location\":{\"raw\":\"Ho Chi Minh City\"},\"experience\":{\"raw\":\"3-5 years\"},\"tags\":[\"Node.js\",\"React\",\"TypeScript\",\"MongoDB\"],\"remainingTags\":[]}",
+      "sha256": "61b9fc99d886f6745ac52631e4ff32f624710f5dc9082d525663418e639ac0c8",
+      "notes": []
+    },
+    {
+      "name": "Vector 7: Special characters in strings",
+      "vectorNumber": 7,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-7",
+        "type": "job",
+        "title": "Test \"Quotes\" & <Tags>",
+        "url": "https://example.com/job?param=value&other=123",
+        "company": {
+          "name": "Company with \"quotes\" & symbols",
+          "url": null,
+          "logo": null
+        },
+        "salary": {
+          "raw": "$1,000-$2,000/month",
+          "min": null,
+          "max": null,
+          "currency": null,
+          "unit": null
+        },
+        "location": {
+          "raw": "District 1, HCMC"
+        },
+        "experience": {
+          "raw": "1-2 years"
+        },
+        "tags": [
+          "C++",
+          "C#",
+          ".NET"
+        ],
+        "remainingTags": null,
+        "published": {
+          "raw": null,
+          "publishedAt": null
+        }
+      },
+      "content": {
+        "type": "job",
+        "title": "Test \"Quotes\" & <Tags>",
+        "url": "https://example.com/job?param=value&other=123",
+        "company": {
+          "name": "Company with \"quotes\" & symbols",
+          "url": null
+        },
+        "salary": {
+          "raw": "$1,000-$2,000/month",
+          "min": null,
+          "max": null,
+          "currency": null,
+          "unit": null
+        },
+        "location": {
+          "raw": "District 1, HCMC"
+        },
+        "experience": {
+          "raw": "1-2 years"
+        },
+        "tags": [
+          "C++",
+          "C#",
+          ".NET"
+        ],
+        "remainingTags": []
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Test \\\"Quotes\\\" & <Tags>\",\"url\":\"https://example.com/job?param=value&other=123\",\"company\":{\"name\":\"Company with \\\"quotes\\\" & symbols\",\"url\":null},\"salary\":{\"raw\":\"$1,000-$2,000/month\",\"min\":null,\"max\":null,\"currency\":null,\"unit\":null},\"location\":{\"raw\":\"District 1, HCMC\"},\"experience\":{\"raw\":\"1-2 years\"},\"tags\":[\"C++\",\"C#\",\".NET\"],\"remainingTags\":[]}",
+      "sha256": "2930cd855daf746184b33948bb0cc1db8eb3cfe3e5231375fea4997f1bcc5cdb",
+      "notes": []
+    },
+    {
+      "name": "Vector 8: Nested objects with nulls",
+      "vectorNumber": 8,
+      "input": {
+        "source": "topcv",
+        "externalId": "test-8",
+        "type": "job",
+        "title": "Nested Test",
+        "url": "https://example.com",
+        "company": {
+          "name": "ABC",
+          "url": "https://abc.com",
+          "logo": "https://logo.png"
+        },
+        "salary": {
+          "raw": null,
+          "min": null,
+          "max": null,
+          "currency": null,
+          "unit": null
+        },
+        "location": {
+          "raw": null
+        },
+        "experience": {
+          "raw": null
+        },
+        "tags": [],
+        "remainingTags": null,
+        "published": {
+          "raw": null,
+          "publishedAt": null
+        }
+      },
+      "content": {
+        "type": "job",
+        "title": "Nested Test",
+        "url": "https://example.com",
+        "company": {
+          "name": "ABC",
+          "url": "https://abc.com"
+        },
+        "salary": {
+          "raw": null,
+          "min": null,
+          "max": null,
+          "currency": null,
+          "unit": null
+        },
+        "location": {
+          "raw": null
+        },
+        "experience": {
+          "raw": null
+        },
+        "tags": [],
+        "remainingTags": []
+      },
+      "canonicalJSON": "{\"type\":\"job\",\"title\":\"Nested Test\",\"url\":\"https://example.com\",\"company\":{\"name\":\"ABC\",\"url\":\"https://abc.com\"},\"salary\":{\"raw\":null,\"min\":null,\"max\":null,\"currency\":null,\"unit\":null},\"location\":{\"raw\":null},\"experience\":{\"raw\":null},\"tags\":[],\"remainingTags\":[]}",
+      "sha256": "f322da5d9eeeb941f412a247dd01a85903247e8afe79b24e712ad30730e8e83f",
+      "notes": []
+    }
+  ]
+}
