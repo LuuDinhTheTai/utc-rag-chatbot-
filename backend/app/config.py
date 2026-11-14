@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     admin_password: str = ''
     google_api_key: str = ''
     gemini_model: str = 'gemini-2.5-flash'
+    ocr_model: str = 'gemini-3.5-flash'
     router_model: str = ''
     embedding_model: str = 'gemini-embedding-001'
     embedding_dimensions: int = Field(default=768, ge=1, le=3072)

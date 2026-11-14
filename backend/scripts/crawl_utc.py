@@ -22,7 +22,7 @@ def bounded(low, high):
 def main():
     parser = argparse.ArgumentParser(description='Crawl UTC admissions respecting robots.txt; stage by default.')
     parser.add_argument('--max-pages', type=bounded(1, 20), default=2)
-    parser.add_argument('--max-articles', type=bounded(1, 300), default=20)
+    parser.add_argument('--max-articles', type=bounded(1, 300), default=10)
     parser.add_argument('--max-requests', type=bounded(2, 500), default=100)
     parser.add_argument('--year', type=bounded(2000, 2100), help='Only publish this admission year')
     parser.add_argument('--publish', action='store_true', help='Embed and publish unambiguous text/PDF articles')

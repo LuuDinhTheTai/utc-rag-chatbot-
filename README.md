@@ -268,7 +268,7 @@ Tạo `backend/.env` từ `backend/.env.example`. Nếu đã có file `.env`, c�
 | --- | --- | --- |
 | `DATA_DIR` | Thư mục chứa `utc.sqlite3` và `files/`; đường dẫn tương đối tính từ thư mục chạy backend | `data/local` |
 | `ADMIN_EMAIL` | Email tạo tài khoản quản trị đầu tiên | `admin@example.com` |
-| `ADMIN_PASSWORD` | Mật khẩu ban đầu, **ít nhất 16 ký tự**, phải thay giá trị mẫu `CHANGE_ME...` | Tự đặt |
+| `ADMIN_PASSWORD` | Mật khẩu ban đầu, **ít nhất 8 ký tự**, phải thay giá trị mẫu `CHANGE_ME...` | Tự đặt |
 | `GOOGLE_API_KEY` | Khóa Gemini, chỉ đặt ở backend | Tự cấp |
 | `GEMINI_MODEL` | Model tạo câu trả lời | `gemini-2.5-flash` |
 | `EMBEDDING_MODEL` | Model tạo embedding | `gemini-embedding-001` |
@@ -299,7 +299,7 @@ python -m venv .venv
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Sửa `backend/.env`: đặt `ADMIN_EMAIL`, `ADMIN_PASSWORD` riêng (ít nhất 16 ký tự) và `GOOGLE_API_KEY`. Nếu file đã tồn tại, không chạy lệnh `Copy-Item` ghi đè mà chỉ bổ sung các biến cần thiết. Sau đó chạy API từ thư mục `backend`:
+Sửa `backend/.env`: đặt `ADMIN_EMAIL`, `ADMIN_PASSWORD` riêng (ít nhất 8 ký tự) và `GOOGLE_API_KEY`. Nếu file đã tồn tại, không chạy lệnh `Copy-Item` ghi đè mà chỉ bổ sung các biến cần thiết. Sau đó chạy API từ thư mục `backend`:
 
 ```powershell
 .venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
@@ -374,7 +374,7 @@ Chạy từ `backend`:
 .venv\Scripts\python scripts/set_admin_password.py
 ```
 
-Trên Linux/macOS, thay bằng `.venv/bin/python scripts/set_admin_password.py`. Script hỏi email và mật khẩu mới, yêu cầu ít nhất 16 ký tự, rồi thu hồi mọi phiên quản trị đang tồn tại.
+Trên Linux/macOS, thay bằng `.venv/bin/python scripts/set_admin_password.py`. Script hỏi email và mật khẩu mới, yêu cầu ít nhất 8 ký tự, rồi thu hồi mọi phiên quản trị đang tồn tại.
 
 ## Kế hoạch tuyển sinh cá nhân
 
@@ -470,7 +470,7 @@ Website có bốn vai trò. Đăng nhập/đăng ký/đổi mật khẩu tại `
 | `lecturer` (giảng viên) | Có | Có | Không |
 | `admin` | Có | Có | Có |
 
-Tất cả vai trò đều có thể tra cứu ngành/điểm chuẩn, hướng dẫn và chat. Tài khoản từ `ADMIN_EMAIL`/`ADMIN_PASSWORD` có vai trò `admin`. Admin thêm tài khoản trong tab **Tài khoản** hoặc qua `POST /admin/accounts` (email, mật khẩu tối thiểu 16 ký tự, role), xem danh sách với `GET /admin/accounts`, đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu qua `PATCH /admin/accounts/{id}`. Đổi quyền, khóa tài khoản hoặc đổi mật khẩu thu hồi toàn bộ phiên của tài khoản đó. Hệ thống không cho tự hạ quyền/khóa admin đang đăng nhập hoặc xóa quyền admin hoạt động cuối cùng.
+Tất cả vai trò đều có thể tra cứu ngành/điểm chuẩn, hướng dẫn và chat. Tài khoản từ `ADMIN_EMAIL`/`ADMIN_PASSWORD` có vai trò `admin`. Admin thêm tài khoản trong tab **Tài khoản** hoặc qua `POST /admin/accounts` (email, mật khẩu tối thiểu 8 ký tự, role), xem danh sách với `GET /admin/accounts`, đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu qua `PATCH /admin/accounts/{id}`. Đổi quyền, khóa tài khoản hoặc đổi mật khẩu thu hồi toàn bộ phiên của tài khoản đó. Hệ thống không cho tự hạ quyền/khóa admin đang đăng nhập hoặc xóa quyền admin hoạt động cuối cùng.
 
 Auth dùng `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /auth/register` và `POST /auth/password`. Các endpoint `/admin/login` và `/admin/logout` cũ vẫn là alias tương thích. Database dùng `accounts`, `auth_sessions`, `schema_migrations`; bảng cũ được giữ lại nhưng không dùng để xác thực. Migration một lần giữ ID, email, mật khẩu hash và trạng thái; ánh xạ `editor → lecturer`, `viewer → student`, `admin → admin`. Phiên cũ yêu cầu đăng nhập lại. Chat tạo khi đăng nhập gắn `account_id` và chỉ chủ tài khoản mới truy cập được bằng cả Bearer token và X-Session-Token.
 
@@ -550,7 +550,7 @@ Trên Linux/macOS, dùng `.venv/bin/python` và `npm` thay cho các lệnh tươ
 
 | Hiện tượng | Kiểm tra |
 | --- | --- |
-| Không đăng nhập được | `ADMIN_EMAIL`, mật khẩu ban đầu đủ 16 ký tự và đã thay `CHANGE_ME...`; tài khoản cũ cần đổi bằng script, không chỉ sửa `.env`. |
+| Không đăng nhập được | `ADMIN_EMAIL`, mật khẩu ban đầu đủ 8 ký tự và đã thay `CHANGE_ME...`; tài khoản cũ cần đổi bằng script, không chỉ sửa `.env`. |
 | `/health` trả `configured: false` | Chưa có lần đăng nhập đầu tiên hoặc chưa đặt `GOOGLE_API_KEY`. |
 | Frontend không gọi được API | Backend đang chạy, `NEXT_PUBLIC_API_URL` đúng, `FRONTEND_ORIGIN` khớp origin của trình duyệt. |
 | Tài liệu ở trạng thái `failed` | Kiểm tra Gemini API key, model, hạn mức và nội dung tài liệu; sau đó dùng **Thử lại**. |
