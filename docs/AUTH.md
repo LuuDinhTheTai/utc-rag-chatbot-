@@ -19,7 +19,7 @@ The website has four roles: guest, student, lecturer and admin. Guests are anony
 - `/admin/accounts`: admin-only listing and creation; `PATCH /admin/accounts/{id}` updates role/status/password.
 - `/admin/login` and `/admin/logout` remain compatibility aliases; `/admin/me` requires lecturer/admin.
 
-Passwords use salted scrypt; only token SHA-256 hashes are persisted. New passwords require 16–256 characters. Login, registration and password changes share the auth rate-limit bucket. Public signup cannot choose a privileged role or use the configured bootstrap admin email. Backend checks account activity and token expiry for every authenticated request. Role/status/password changes revoke all sessions; frontend hides controls for unavailable permissions but is not the security boundary.
+Passwords use salted scrypt; only token SHA-256 hashes are persisted. New passwords require 8–256 characters. Login, registration and password changes share the auth rate-limit bucket. Public signup cannot choose a privileged role or use the configured bootstrap admin email. Backend checks account activity and token expiry for every authenticated request. Role/status/password changes revoke all sessions; frontend hides controls for unavailable permissions but is not the security boundary.
 
 The web app uses one AuthProvider and stores the Bearer token in sessionStorage under `utc-auth-token`. Authenticated API calls automatically attach it. Logout, expiry and account changes clear the browser's current chat token and visible conversation. The application never persists account passwords in browser storage.
 

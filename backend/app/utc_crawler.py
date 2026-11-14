@@ -30,7 +30,7 @@ def ocr_resource(data, mime):
     from .rag import invoke_gemini
     if mime not in {'image/jpeg', 'image/png', 'image/webp', 'application/pdf'}:
         raise ValueError('Unsupported OCR media type')
-    model = ChatGoogleGenerativeAI(model=settings().gemini_model,
+    model = ChatGoogleGenerativeAI(model=settings().ocr_model,
                                   google_api_key=settings().google_api_key,
                                   temperature=0, timeout=60, max_retries=0)
     result = invoke_gemini(model, [('system', 'Chỉ chép nguyên văn tài liệu tiếng Việt được cung cấp. '
@@ -44,6 +44,18 @@ def ocr_resource(data, mime):
     if len(text.strip()) < 30:
         raise ValueError('Insufficient OCR text')
     return text.strip()
+
+
+def ocr_error_message(exc):
+    """Expose actionable diagnostics without leaking provider responses or credentials."""
+    name = type(exc).__name__
+    if 'ModelNotFound' in name:
+        return f'Model OCR {settings().ocr_model} không khả dụng. Kiểm tra cấu hình OCR_MODEL rồi khởi động lại backend.'
+    if 'ResourceExhausted' in name or 'RateLimit' in name:
+        return 'OCR đã hết hạn mức hoặc bị giới hạn yêu cầu. Kiểm tra hạn mức Gemini rồi thử lại.'
+    if 'Permission' in name or 'Authentication' in name:
+        return 'Gemini từ chối quyền truy cập OCR. Kiểm tra khóa API và quyền dùng model.'
+    return f'Không đọc được nội dung ảnh/PDF ({name}). Kiểm tra tệp nguồn và cấu hình OCR rồi thử lại.'
 
 
 def normalize(text):
@@ -339,7 +351,7 @@ def known_sources():
     return known
 
 
-def crawl(*, max_pages=2, max_articles=20, max_requests=100, do_publish=False, year=None, client=None, ocr=False, progress=None, recheck_existing=False):
+def crawl(*, max_pages=2, max_articles=10, max_requests=100, do_publish=False, year=None, client=None, ocr=False, progress=None, recheck_existing=False, should_stop=None):
     report = {'started_at': now(), 'items': [], 'errors': [], 'requests': 0}
     with run_lock(), (client or httpx.Client(timeout=30, headers={'User-Agent': AGENT + '/1.0'})) as http:
         known = known_sources()
@@ -348,11 +360,17 @@ def crawl(*, max_pages=2, max_articles=20, max_requests=100, do_publish=False, y
             report['requests'] = fetcher.count
             if progress:
                 progress(report)
+        def stop_requested():
+            # Only check between documents: finish all attachments and staging first.
+            return should_stop is not None and should_stop()
         try:
-            fetcher.load_robots()
+            if not stop_requested():
+                fetcher.load_robots()
             notify()
             queue, visited, article_urls = [ORIGIN + '/'], set(), []
             while queue and len(visited) < max_pages:
+                if stop_requested():
+                    break
                 url = queue.pop(0)
                 if url in visited:
                     continue
@@ -368,6 +386,8 @@ def crawl(*, max_pages=2, max_articles=20, max_requests=100, do_publish=False, y
                 notify()
             downloaded, seen_sources = 0, set()
             for url in article_urls:
+                if stop_requested():
+                    break
                 key = source_key(url)
                 if key in seen_sources:
                     continue
@@ -390,10 +410,10 @@ def crawl(*, max_pages=2, max_articles=20, max_requests=100, do_publish=False, y
                         raise ValueError('Article is not HTML')
                     item = parse_article(data, final)
                     item['reasons'] = []
-                    if re.search(r'danh sach (thi sinh|hoc sinh|sinh vien)|tra cuu|phan loai tieng anh', normalize(item['title'])):
-                        item['text'] = ''
-                        item['assets'] = []
-                        item['reasons'].append('personal_or_unrelated_data')
+                    # if re.search(r'danh sach (thi sinh|hoc sinh|sinh vien)|tra cuu|phan loai tieng anh', normalize(item['title'])):
+                    #     item['text'] = ''
+                    #     item['assets'] = []
+                    #     item['reasons'].append('personal_or_unrelated_data')
                     # Leave image sources visible for review; never index a title as a full article.
                     for asset in item['assets'][:20]:
                         if asset['kind'] == 'image':
@@ -407,8 +427,9 @@ def crawl(*, max_pages=2, max_articles=20, max_requests=100, do_publish=False, y
                                 item['reasons'].append('ocr_review_required')
                             except (httpx.HTTPStatusError, RuntimeError):
                                 raise
-                            except Exception:
+                            except Exception as exc:
                                 item['reasons'].append('ocr_failed')
+                                asset['error'] = ocr_error_message(exc)
                             continue
                         if not urlsplit(asset['url']).path.lower().endswith('.pdf'):
                             item['reasons'].append('unsupported_attachment')
@@ -426,7 +447,11 @@ def crawl(*, max_pages=2, max_articles=20, max_requests=100, do_publish=False, y
                                 from pypdf import PdfReader
                                 if len(PdfReader(io.BytesIO(pdf)).pages) > 30:
                                     raise ValueError('OCR PDF exceeds 30 pages')
-                                pdf_text = ocr_resource(pdf, 'application/pdf')
+                                try:
+                                    pdf_text = ocr_resource(pdf, 'application/pdf')
+                                except Exception as exc:
+                                    asset['error'] = ocr_error_message(exc)
+                                    raise ValueError('PDF OCR failed') from exc
                                 item['reasons'].append('ocr_review_required')
                             item['text'] += '\n\n' + pdf_text
                             asset['sha256'] = hashlib.sha256(pdf).hexdigest()

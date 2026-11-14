@@ -14,7 +14,7 @@ export const reasonLabels:Record<string,string> = {
 const labels:Record<string,string>={staged:'Chờ duyệt',review:'Cần kiểm tra',approving:'Đang thêm vào RAG',published:'Đã thêm vào RAG',unchanged:'Đã có trong RAG',rejected:'Đã bỏ qua'};
 type Duplicate={id:string;title:string;reason:string;status:string};
 type Candidate={id:string;url:string;title:string;year:number|null;campus:string|null;status:string;preview:string;reasons:string[];error:string|null;duplicate?:Duplicate|null};
-type Detail=Candidate&{text:string;original_text:string;assets:{url:string;kind:string}[]};
+type Detail=Candidate&{text:string;original_text:string;assets:{url:string;kind:string;error?:string}[]};
 type Listing={items:Candidate[];total:number;page:number;page_size:number};
 
 export default function UtcCrawlerReview({token,onComplete}:{token:string;onComplete:()=>Promise<void>}){
@@ -154,6 +154,9 @@ export default function UtcCrawlerReview({token,onComplete}:{token:string;onComp
     {opening?<p role="status">Đang tải nội dung tài liệu…</p>:selected?<form className="crawler-editor" onSubmit={approve}>
       <h4>{selected.title}</h4>
       <a href={selected.url} target="_blank" rel="noreferrer">Mở bài gốc trên UTC ↗</a>
+      {selected.reasons.includes('ocr_failed')&&<p className="error" role="alert">Không đọc được chữ trong ảnh bằng OCR. Sau khi kiểm tra cấu hình OCR_MODEL và hạn mức Gemini, bật “Đọc cả ảnh và PDF scan (OCR)” cùng “Kiểm tra lại bài đã có” rồi chạy lấy dữ liệu lại. Mở lại bài để xem nội dung mới.</p>}
+      {selected.reasons.includes('needs_ocr')&&<p className="notice">Bài có nội dung trong ảnh. Bật “Đọc cả ảnh và PDF scan (OCR)” cùng “Kiểm tra lại bài đã có” rồi chạy lấy dữ liệu lại để trích xuất văn bản.</p>}
+      {selected.assets.filter(a=>a.error).map(asset=><p className="error" role="alert" key={asset.url}>{asset.error}</p>)}
       {duplicate&&<p className="notice">{duplicate.reason==='near_content'?'Nội dung gần trùng với':'Nội dung trùng với'} “{duplicate.title}” trong RAG. {selected.status==='unchanged'?'Đã bỏ qua bản trùng; không tạo thêm embedding.':duplicateReady?'Bấm “Bỏ qua bản trùng” để đóng bài trong hàng chờ, không thêm tài liệu mới.':'Tài liệu hiện có đang ẩn, xử lý hoặc có lỗi. Kiểm tra tài liệu đó trước khi duyệt lại.'}</p>}
       {!!selected.assets.length&&<details><summary>Ảnh và tệp đính kèm ({selected.assets.length})</summary>
         {selected.assets.filter(a=>/^https?:\/\//i.test(a.url)).map((asset,i)=><p key={asset.url}><a href={asset.url} target="_blank" rel="noreferrer">{asset.kind==='image'?'Ảnh':'Tệp'} {i+1} ↗</a></p>)}

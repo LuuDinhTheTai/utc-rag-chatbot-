@@ -43,7 +43,7 @@ export default function AdminPage(){
       {section==='accounts'&&role==='admin'?<section className="panel"><h2>Quản lý tài khoản</h2>
         <form className="form-grid" onSubmit={e=>{e.preventDefault();run(async()=>{await api('/admin/accounts',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({email:newEmail,password:newPassword,role:newRole})});setNewEmail('');setNewPassword('');await refresh();});}}>
           <label>Email<input type="email" required value={newEmail} onChange={e=>setNewEmail(e.target.value)}/></label>
-          <label>Mật khẩu (ít nhất 16 ký tự)<input type="password" required minLength={16} value={newPassword} onChange={e=>setNewPassword(e.target.value)}/></label>
+          <label>Mật khẩu (ít nhất 8 ký tự)<input type="password" required minLength={8} value={newPassword} onChange={e=>setNewPassword(e.target.value)}/></label>
           <label>Vai trò<select value={newRole} onChange={e=>setNewRole(e.target.value as Role)}><option value="student">Sinh viên</option><option value="lecturer">Giảng viên</option><option value="admin">Admin</option></select></label>
           <button className="primary" disabled={busy}>Thêm tài khoản</button>
         </form>

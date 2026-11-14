@@ -64,8 +64,30 @@ def start_job(body: CrawlInput, tasks: BackgroundTasks, uid=Depends(can_edit)):
     return job_result(row)
 
 
+@router.post('/{identifier}/stop', status_code=202)
+def stop_job(identifier: str, uid=Depends(can_edit)):
+    with connect() as conn:
+        conn.execute('BEGIN IMMEDIATE')
+        expire_jobs(conn)
+        row = conn.execute('SELECT * FROM utc_crawl_jobs WHERE id=?', (identifier,)).fetchone()
+        if not row:
+            raise HTTPException(404, 'Không tìm thấy lượt lấy dữ liệu.')
+        if row['status'] == 'running':
+            config = json.loads(row['config'])
+            config['stop_requested'] = True
+            conn.execute('UPDATE utc_crawl_jobs SET config=? WHERE id=?',
+                         (json.dumps(config), identifier))
+            row = conn.execute('SELECT * FROM utc_crawl_jobs WHERE id=?', (identifier,)).fetchone()
+    return job_result(row)
+
+
 def execute_job(identifier, year, ocr, recheck_existing=False):
     stopped = threading.Event()
+
+    def should_stop():
+        with connect() as conn:
+            row = conn.execute('SELECT status,config FROM utc_crawl_jobs WHERE id=?', (identifier,)).fetchone()
+        return not row or row['status'] != 'running' or json.loads(row['config']).get('stop_requested', False)
 
     def heartbeat():
         while not stopped.wait(20):
@@ -83,10 +105,15 @@ def execute_job(identifier, year, ocr, recheck_existing=False):
     thread = threading.Thread(target=heartbeat, daemon=True)
     thread.start()
     try:
-        report = crawl(year=year, ocr=ocr, do_publish=False, progress=progress, recheck_existing=recheck_existing)
+        report = crawl(year=year, ocr=ocr, do_publish=False, progress=progress,
+                       recheck_existing=recheck_existing, should_stop=should_stop)
         with connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            row = conn.execute('SELECT config FROM utc_crawl_jobs WHERE id=?', (identifier,)).fetchone()
+            status = 'stopped' if row and json.loads(row['config']).get('stop_requested') else (
+                'completed_with_errors' if report['errors'] else 'completed')
             conn.execute("UPDATE utc_crawl_jobs SET status=?,updated_at=?,report=? WHERE id=? AND status='running'",
-                         ('completed_with_errors' if report['errors'] else 'completed', now(),
+                         (status, now(),
                           json.dumps(report, ensure_ascii=False), identifier))
     except Exception as exc:
         log.error('crawler_job_failed job=%s type=%s', identifier, type(exc).__name__)

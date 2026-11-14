@@ -28,8 +28,8 @@ def bootstrap_admin():
         cfg = settings()
         if not cfg.admin_email or not cfg.admin_password:
             raise HTTPException(503, 'Configure ADMIN_EMAIL and ADMIN_PASSWORD on the server.')
-        if len(cfg.admin_password) < 16 or cfg.admin_password.startswith('CHANGE_ME'):
-            raise HTTPException(503, 'Set a unique ADMIN_PASSWORD of at least 16 characters.')
+        if len(cfg.admin_password) < 8 or cfg.admin_password.startswith('CHANGE_ME'):
+            raise HTTPException(503, 'Set a unique ADMIN_PASSWORD of at least 8 characters.')
         conn.execute("INSERT INTO accounts(id,email,password_hash,role,created_at,updated_at) VALUES(?,?,?,'admin',?,?)",
                      (str(uuid4()), cfg.admin_email.strip().lower(), password_hash(cfg.admin_password), now(), now()))
 
@@ -130,7 +130,7 @@ class AccountCreate(BaseModel):
     model_config = ConfigDict(extra='forbid')
     email: str = Field(min_length=3, max_length=254)
     display_name: str = Field(default='', max_length=100)
-    password: str = Field(min_length=16, max_length=256)
+    password: str = Field(min_length=8, max_length=256)
     role: Literal['admin', 'lecturer', 'student']
 
 
@@ -138,7 +138,7 @@ class AccountUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
     role: Literal['admin', 'lecturer', 'student'] | None = None
     is_active: bool | None = None
-    password: str | None = Field(default=None, min_length=16, max_length=256)
+    password: str | None = Field(default=None, min_length=8, max_length=256)
 
 
 @router.get('/admin/accounts')
@@ -201,7 +201,7 @@ class RegisterInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     email: str = Field(min_length=3, max_length=254)
     display_name: str = Field(min_length=2, max_length=100)
-    password: str = Field(min_length=16, max_length=256)
+    password: str = Field(min_length=8, max_length=256)
 
     @field_validator('display_name')
     @classmethod
@@ -223,7 +223,7 @@ def register(body: RegisterInput):
 class PasswordChange(BaseModel):
     model_config = ConfigDict(extra='forbid')
     current_password: str = Field(min_length=1, max_length=256)
-    new_password: str = Field(min_length=16, max_length=256)
+    new_password: str = Field(min_length=8, max_length=256)
 
 
 @router.post('/auth/password')

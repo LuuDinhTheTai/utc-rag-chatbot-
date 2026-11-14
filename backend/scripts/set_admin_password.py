@@ -8,9 +8,9 @@ from app.localdb import connect
 from app.security import password_hash
 
 email = input('Admin email: ').strip().lower()
-password = getpass.getpass('New password (at least 16 characters): ')
+password = getpass.getpass('New password (at least 8 characters): ')
 confirmation = getpass.getpass('Confirm new password: ')
-if len(password) < 16 or password != confirmation:
+if len(password) < 8 or password != confirmation:
     raise SystemExit('Password too short or confirmation does not match.')
 with connect() as conn:
     row = conn.execute("SELECT id FROM accounts WHERE role='admin' AND email=?", (email,)).fetchone()
