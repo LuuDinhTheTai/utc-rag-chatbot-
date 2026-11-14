@@ -18,7 +18,7 @@ from .v2store import relation, write
 
 JSON_FIELDS = {'sources', 'embedding', 'methods', 'subject_groups'}
 BOOL_FIELDS = {'supported', 'is_active', 'is_published'}
-TABLES = {'chat_sessions', 'messages', 'feedback', 'documents', 'document_chunks', 'major_catalogue', 'freshman_guides', 'freshman_items'}
+TABLES = {'chat_sessions', 'messages', 'feedback', 'documents', 'document_chunks', 'major_catalogue', 'freshman_guides', 'freshman_items', 'api_keys', 'career_jobs'}
 
 
 def now():
@@ -43,6 +43,8 @@ def connect():
         ensure_routing(conn)
         from .crawler_schema import ensure_crawler
         ensure_crawler(conn)
+        from .career_schema import ensure_career
+        ensure_career(conn)
         conn.execute('PRAGMA journal_mode=WAL')
         return conn
     except Exception:

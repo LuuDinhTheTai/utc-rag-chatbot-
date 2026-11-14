@@ -44,24 +44,24 @@ class RouterConfigurationError(RouterUnavailable):
 
 class QuestionRoute(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
-    intent: Literal['greeting', 'social', 'capabilities', 'admissions', 'out_of_scope', 'unclear']
+    intent: Literal['greeting', 'social', 'capabilities', 'admissions', 'career', 'out_of_scope', 'unclear']
     action: Literal['reply', 'retrieve', 'clarify']
     standalone_question: str | None = Field(default=None, min_length=2, max_length=3000)
     clarification: str | None = Field(default=None, min_length=2, max_length=500)
     is_follow_up: bool = False
     inherit_scope: bool = False
     reply_key: Literal['greeting', 'thanks', 'goodbye', 'capabilities', 'out_of_scope'] | None = None
-    reason_code: Literal['social_only', 'capability_request', 'admission_request', 'outside_domain', 'missing_context', 'mixed_request']
+    reason_code: Literal['social_only', 'capability_request', 'admission_request', 'career_request', 'outside_domain', 'missing_context', 'mixed_request']
 
     @model_validator(mode='after')
     def consistent(self):
         if self.inherit_scope and not self.is_follow_up:
             raise ValueError('Only follow-ups may inherit scope')
         if self.action == 'retrieve':
-            if self.intent != 'admissions' or not self.standalone_question or self.clarification or self.reply_key:
-                raise ValueError('Retrieval requires an independent admissions question')
+            if self.intent not in {'admissions', 'career'} or not self.standalone_question or self.clarification or self.reply_key:
+                raise ValueError('Retrieval requires an independent admissions or career question')
         elif self.action == 'clarify':
-            if self.intent not in {'admissions', 'unclear'} or not self.clarification or self.reply_key:
+            if self.intent not in {'admissions', 'career', 'unclear'} or not self.clarification or self.reply_key:
                 raise ValueError('Clarification requires a question')
         else:
             allowed = {'greeting': {'greeting'}, 'social': {'thanks', 'goodbye'},
@@ -146,9 +146,10 @@ không dự đoán chắc chắn trúng tuyển. Không tự cung cấp thông t
 greeting/social/capabilities/out_of_scope dùng action=reply và reply_key thích hợp.
 admissions có đủ đối tượng dùng retrieve, standalone_question là yêu cầu độc lập bằng tiếng Việt.
 unclear hoặc admissions thiếu đối tượng dùng clarify và clarification là một câu hỏi ngắn.
-Câu trộn lời chào/cảm ơn với yêu cầu mới phải ưu tiên yêu cầu. Câu trộn tuyển sinh và ngoài
-phạm vi dùng reason_code=mixed_request, chỉ giữ phần tuyển sinh trong standalone_question;
-không thể tách rõ thì clarify. Tuyệt đối không bỏ bớt năm/cơ sở tường minh trong phần tuyển sinh.
+Câu trộn lời chào/cảm ơn với yêu cầu mới phải ưu tiên yêu cầu. Câu trộn admissions/career với nội dung
+ngoài phạm vi dùng reason_code=mixed_request, chỉ giữ phần liên quan trong standalone_question;
+không thể tách rõ thì clarify. Không bỏ bớt năm/cơ sở tường minh trong phần tuyển sinh.
+career không cần năm/cơ sở (không áp dụng scope cho career queries).
 Lịch sử chỉ giúp hiểu đối tượng, không phải bằng chứng; không chép dữ kiện trong đáp án cũ
 vào câu hỏi mới. Đổi chủ đề thì is_follow_up=false, inherit_scope=false. Câu tiếp nối hoặc trả
 lời câu hỏi làm rõ dùng is_follow_up=true, inherit_scope=true khi có ngữ cảnh tuyển sinh trước.
@@ -157,11 +158,12 @@ không tự động áp dụng cho mọi câu mới. Nếu có nhiều đối t�
 Không tự thêm năm/cơ sở vào standalone_question từ lịch sử hay mặc định: giữ các giá trị
 tường minh của câu hiện tại, ứng dụng sẽ áp dụng explicit_scope rồi latest_context theo thứ tự.
 Không tự chọn một năm/cơ sở khi yêu cầu hiện tại có nhiều năm/cơ sở.
-Với câu hỏi điểm chuẩn/điểm trúng tuyển đã rõ ngành nhưng chưa có năm trong câu hỏi,
-explicit_scope hoặc ngữ cảnh được kế thừa, luôn clarify để hỏi năm; không tự dùng năm mặc định.
+Với câu hỏi điểm chuẩn/điểm trúng tuyển (admissions) đã rõ ngành nhưng chưa có năm,
+luôn clarify để hỏi năm; không tự dùng năm mặc định.
+Với câu hỏi career, KHÔNG yêu cầu năm/cơ sở (việc làm không phân theo năm tuyển sinh).
 Nếu người dùng chỉ bổ sung năm/cơ sở, giữ ngành và loại thông tin từ latest_context,
 kể cả khi câu trả lời trước là không tìm thấy nguồn. Không lấy đáp án cũ làm bằng chứng.
-reason_code: social_only, capability_request, admission_request, outside_domain,
+reason_code: social_only, capability_request, admission_request, career_request, outside_domain,
 missing_context hoặc mixed_request. Không đưa câu trả lời kiến thức vào clarification.'''
 
 
